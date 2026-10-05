@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+# never commit raw workbooks by accident
+*.xlsx
+*.xls
+_check.js

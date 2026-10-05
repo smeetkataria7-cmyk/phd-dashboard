@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>__TITLE__ — Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root{--bg:#f4f6f9;--panel:#fff;--ink:#0f172a;--mute:#64748b;--line:#e2e8f0;--accent:#2563eb;--accent-soft:#dbeafe;--good:#16a34a;--warn:#f59e0b}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0b1220;--panel:#121a2b;--ink:#e5e9f2;--mute:#94a3b8;--line:#243049;--accent:#60a5fa;--accent-soft:#1e3a5f}}
+:root[data-theme=dark]{--bg:#0b1220;--panel:#121a2b;--ink:#e5e9f2;--mute:#94a3b8;--line:#243049;--accent:#60a5fa;--accent-soft:#1e3a5f}
+:root[data-theme=light]{--bg:#f4f6f9;--panel:#fff;--ink:#0f172a;--mute:#64748b;--line:#e2e8f0;--accent:#2563eb;--accent-soft:#dbeafe}
+.heat td,.heat th{padding:4px 7px;text-align:center;font-size:11.5px}
+.heat th:first-child,.heat td:first-child{text-align:left;position:sticky;left:0;background:var(--panel);z-index:1}
+.heat td.c{cursor:pointer;min-width:46px}
+.heat td.c:hover{outline:2px solid var(--accent)}
+.legend{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--mute);margin:6px 0}
+.legend i{display:inline-block;width:120px;height:8px;border-radius:4px;background:linear-gradient(90deg,rgba(220,38,38,.85),rgba(148,163,184,.12),rgba(37,99,235,.85))}
+.top3{margin:0;padding-left:18px;font-size:12.5px}
+.top3 li{margin:3px 0}
+.pos{color:#2563eb}.neg{color:#dc2626}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 -apple-system,Segoe UI,Roboto,Arial,sans-serif}
+header{padding:18px 24px 10px;background:var(--panel);border-bottom:1px solid var(--line)}
+h1{margin:0;font-size:20px}
+.meta{color:var(--mute);font-size:12.5px;margin-top:2px}
+.bar{position:sticky;top:0;z-index:20;background:var(--panel);border-bottom:1px solid var(--line);padding:8px 24px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.tabs{display:flex;gap:4px;flex-wrap:wrap;flex:1}
+.tab{border:1px solid var(--line);background:transparent;color:var(--ink);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:13px}
+.tab.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.filters{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.filters label{font-size:12px;color:var(--mute)}
+select,input[type=text],input[type=number]{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:5px 8px;font-size:13px}
+button.btn{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:5px 10px;cursor:pointer;font-size:13px}
+main{padding:18px 24px 40px;max-width:1500px;margin:0 auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;min-width:0}
+.card h3{margin:0 0 2px;font-size:14px}
+.card .sub{margin:0 0 8px;color:var(--mute);font-size:12px}
+.span2{grid-column:span 2}.span3{grid-column:1/-1}
+@media(max-width:820px){.span2{grid-column:auto}}
+.chartbox{position:relative;height:280px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:14px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.kpi .l{color:var(--mute);font-size:11.5px;text-transform:uppercase;letter-spacing:.04em}
+.kpi .v{font-size:24px;font-weight:650;margin-top:2px}
+.kpi .h{color:var(--mute);font-size:11.5px}
+h2{font-size:15px;margin:22px 0 10px}
+.tablewrap{overflow:auto;max-height:430px;border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th,td{padding:5px 9px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+th{position:sticky;top:0;background:var(--panel);cursor:pointer;z-index:1}
+tr:hover td{background:var(--accent-soft)}
+.pager{display:flex;gap:8px;align-items:center;margin-top:8px;font-size:12.5px;color:var(--mute)}
+.ctrl{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-bottom:10px}
+.ctrl div{display:flex;flex-direction:column;gap:2px}.ctrl span{font-size:11px;color:var(--mute)}
+.fillbar{height:6px;background:var(--line);border-radius:3px;width:70px;display:inline-block;vertical-align:middle}
+.fillbar i{display:block;height:100%;background:var(--good);border-radius:3px}
+.note{color:var(--mute);font-size:12px}
+.pill{display:inline-block;background:var(--accent-soft);color:var(--accent);border-radius:99px;padding:1px 8px;font-size:11px}
+.empty{padding:40px;text-align:center;color:var(--mute)}
+</style>
+</head>
+<body>
+<header>
+  <h1 id="title"></h1>
+  <div class="meta" id="meta"></div>
+</header>
+<div class="bar">
+  <div class="tabs" id="tabs"></div>
+  <div class="filters" id="filters"></div>
+  <button class="btn" id="themeBtn" title="Switch theme: Auto → Light → Dark" onclick="cycleTheme()"></button>
+</div>
+<main id="root"></main>
+
+<script>
+const D = __DATA_JSON__;
+const S = D.sheets;
+const PAL=['#2563eb','#16a34a','#f59e0b','#dc2626','#7c3aed','#0891b2','#db2777','#65a30d','#ea580c','#64748b'];
+const root=document.getElementById('root');
+
+/* ---------- helpers ---------- */
+const el=(tag,attrs={},...kids)=>{const e=document.createElement(tag);
+  for(const [k,v] of Object.entries(attrs||{})){
+    if(k==='class')e.className=v; else if(k==='html')e.innerHTML=v;
+    else if(k.startsWith('on'))e.addEventListener(k.slice(2),v); else e.setAttribute(k,v);}
+  for(const k of kids.flat()){ if(k==null)continue; e.append(k.nodeType?k:document.createTextNode(k)); }
+  return e;};
+const isNum=v=>typeof v==='number'&&isFinite(v);
+const nums=a=>a.filter(isNum);
+const mean=a=>{a=nums(a);return a.length?a.reduce((x,y)=>x+y,0)/a.length:null};
+const sum=a=>nums(a).reduce((x,y)=>x+y,0);
+const fmt=(v,d=2)=>{ if(v==null||(typeof v==='number'&&!isFinite(v)))return '–';
+  if(typeof v==='number'){ if(Math.abs(v)>=10000)return v.toLocaleString(undefined,{maximumFractionDigits:0}); return String(+v.toFixed(d)); }
+  return String(v); };
+const charts=[]; function mk(canvas,cfg){const c=new Chart(canvas,cfg);charts.push(c);return c;}
+function clearCharts(){charts.splice(0).forEach(c=>c.destroy());}
+const short=n=>n.replace(/^S\d+_?/,'').replace(/_/g,' ')||n;
+const colNames=s=>s.cols.map(c=>c.name);
+const colType=(s,n)=>(s.cols.find(c=>c.name===n)||{}).type;
+const colFind=(s,re)=>colNames(s).find(n=>re.test(n));
+const hasCols=(s,...ns)=>ns.every(n=>s.data[n]);
+
+/* ---------- global filters ---------- */
+const FILTER_COLS=['Variety Number','Season','Crop Plantation Type'];
+const filters={};
+function idxOf(s){
+  const act=Object.entries(filters).filter(([c,v])=>v&&s.data[c]);
+  const key=JSON.stringify(act);
+  if(s._k===key)return s._i;
+  const out=[];
+  for(let i=0;i<s.nrows;i++){let ok=true;for(const [c,v] of act){if(s.data[c][i]!==v){ok=false;break;}} if(ok)out.push(i);}
+  s._k=key;s._i=out;return out;
+}
+const vals=(s,c,idx)=>{const d=s.data[c];return idx.map(i=>d[i]);};
+function buildFilters(){
+  const box=document.getElementById('filters');box.innerHTML='';
+  FILTER_COLS.forEach(c=>{
+    const withCol=S.filter(s=>s.data[c]);
+    if(withCol.length<2)return;
+    const set=new Set();withCol.forEach(s=>s.data[c].forEach(v=>v!=null&&set.add(v)));
+    if(set.size<2||set.size>60)return;
+    const sel=el('select',{onchange:e=>{filters[c]=e.target.value;render();}},el('option',{value:''},'All'),
+      ...[...set].sort().map(v=>el('option',{value:v},v)));
+    box.append(el('label',{},c.replace(' Number','')+': '),sel);
+  });
+  box.append(el('button',{class:'btn',onclick:()=>{Object.keys(filters).forEach(k=>filters[k]='');buildFilters();render();}},'Reset'));
+}
+
+/* ---------- UI blocks ---------- */
+function kpi(label,value,hint){return el('div',{class:'kpi'},el('div',{class:'l'},label),el('div',{class:'v'},value),hint?el('div',{class:'h'},hint):null);}
+function card(title,sub,cls=''){const cv=el('canvas');const c=el('div',{class:'card '+cls},el('h3',{},title),sub?el('p',{class:'sub'},sub):null,el('div',{class:'chartbox'},cv));return {c,cv};}
+const baseOpts=(extra={})=>Object.assign({responsive:true,maintainAspectRatio:false,animation:false,
+  plugins:{legend:{labels:{boxWidth:12,color:getComputedStyle(document.body).color}}},
+  scales:{x:{ticks:{color:'#94a3b8',maxRotation:60},grid:{color:'rgba(148,163,184,.15)'}},y:{ticks:{color:'#94a3b8'},grid:{color:'rgba(148,163,184,.15)'}}}},extra);
+function groupAgg(keys,values,agg='mean'){
+  const m=new Map();
+  keys.forEach((k,i)=>{if(k==null)return;const v=values?values[i]:1;if(!m.has(k))m.set(k,[]);if(isNum(v)||!values)m.get(k).push(v);});
+  const out=[];
+  for(const [k,a] of m){let r;
+    if(agg==='count')r=a.length; else if(agg==='sum')r=sum(a); else if(agg==='max')r=Math.max(...a); else if(agg==='min')r=Math.min(...a); else r=mean(a);
+    out.push([k,r]);}
+  return out;
+}
+const cmpMix=(a,b)=>(typeof a[0]==='number'&&typeof b[0]==='number')?a[0]-b[0]:String(a[0]).localeCompare(String(b[0]),undefined,{numeric:true});
+
+/* ---------- Overview ---------- */
+function overview(){
+  const frag=[];
+  const kp=el('div',{class:'kpis'});
+  S.forEach(s=>{const idx=idxOf(s);const fill=s.cols.length?mean(s.cols.map(c=>c.filled))*100:0;
+    kp.append(kpi(short(s.name),idx.length.toLocaleString(),`${s.cols.length} cols · ${fill.toFixed(0)}% filled`+(idx.length!==s.nrows?` · of ${s.nrows}`:'')));});
+  frag.push(kp);
+
+  const g=el('div',{class:'grid'});
+
+  /* Field metadata */
+  const fm=S.find(s=>hasCols(s,'Latitude','Longitude'));
+  if(fm){
+    const idx=idxOf(fm);
+    const area=fm.data['Area (ha)']?sum(vals(fm,'Area (ha)',idx)):null;
+    const vcol=fm.data['Variety Number']?'Variety Number':null;
+    const fcol=colFind(fm,/^Field_ID$/i)||colFind(fm,/^Field$/i);
+    const kk=el('div',{class:'kpis',style:'grid-column:1/-1;margin:0'});
+    kk.append(kpi('Plots',idx.length),
+      fcol?kpi('Fields',new Set(vals(fm,fcol,idx).filter(v=>v!=null)).size):null,
+      vcol?kpi('Varieties',new Set(vals(fm,vcol,idx).filter(v=>v!=null)).size):null,
+      area!=null?kpi('Total area (ha)',fmt(area,3)):null,
+      fm.data['Harvest Age (Days)']?kpi('Avg harvest age',fmt(mean(vals(fm,'Harvest Age (Days)',idx)),0)+' d'):null);
+    g.append(kk);
+    const {c,cv}=card('Field locations','Longitude / latitude, bubble size = plot area'+(vcol?', colour = variety':''),'span2');
+    g.append(c);
+    const lat=vals(fm,'Latitude',idx),lon=vals(fm,'Longitude',idx),ar=fm.data['Area (ha)']?vals(fm,'Area (ha)',idx):[];
+    const maxA=Math.max(...nums(ar),1e-9);
+    const groups=new Map();
+    idx.forEach((i,k)=>{if(!isNum(lat[k])||!isNum(lon[k]))return;const gk=vcol?(fm.data[vcol][i]||'n/a'):'plots';
+      if(!groups.has(gk))groups.set(gk,[]);
+      groups.get(gk).push({x:lon[k],y:lat[k],r:isNum(ar[k])?4+10*Math.sqrt(ar[k]/maxA):6});});
+    mk(cv,{type:'bubble',data:{datasets:[...groups].map(([k,pts],j)=>({label:k,data:pts,backgroundColor:PAL[j%PAL.length]+'99',borderColor:PAL[j%PAL.length]}))},
+      options:baseOpts({scales:{x:{title:{display:true,text:'Longitude',color:'#94a3b8'},ticks:{color:'#94a3b8'},grid:{color:'rgba(148,163,184,.15)'}},y:{title:{display:true,text:'Latitude',color:'#94a3b8'},ticks:{color:'#94a3b8'},grid:{color:'rgba(148,163,184,.15)'}}}})});
+    if(vcol){
+      const {c:c2,cv:cv2}=card('Plots per variety','Count of plots');
+      g.append(c2);
+      const a=groupAgg(vals(fm,vcol,idx),null,'count').sort((x,y)=>y[1]-x[1]);
+      mk(cv2,{type:'bar',data:{labels:a.map(x=>x[0]),datasets:[{label:'Plots',data:a.map(x=>x[1]),backgroundColor:PAL[0]}]},options:baseOpts({indexAxis:'y',plugins:{legend:{display:false}}})});
+    }
+  }
+
+  /* Ground-truth quality */
+  const gt=S.find(s=>hasCols(s,'Brix','Pol')&&(s.data['CCS']||s.data['Purity']));
+  if(gt){
+    const idx=idxOf(gt);
+    const kk=el('div',{class:'kpis',style:'grid-column:1/-1;margin:0'});
+    ['Brix','Pol','CCS','Purity','Fiber'].filter(c=>gt.data[c]).forEach(c=>kk.append(kpi('Avg '+c,fmt(mean(vals(gt,c,idx))),'ground truth')));
+    kk.append(kpi('Samples',idx.length));
+    g.append(kk);
+    const stageCol=gt.data['Crop_Stage']?'Crop_Stage':null;
+    const dap=gt.data['Days After Planting (DAP)']?vals(gt,'Days After Planting (DAP)',idx):null;
+    const metrics=['Brix','Pol','CCS'].filter(c=>gt.data[c]);
+    if(stageCol){
+      const keys=vals(gt,stageCol,idx);
+      const order=new Map();
+      if(dap)groupAgg(keys,dap,'mean').forEach(([k,v])=>order.set(k,v));
+      const labels=[...new Set(keys.filter(Boolean))].sort((a,b)=>(order.get(a)??0)-(order.get(b)??0));
+      const {c,cv}=card('Juice quality by crop stage','Average per stage (ordered by days after planting)');
+      g.append(c);
+      mk(cv,{type:'bar',data:{labels,datasets:metrics.map((m,j)=>({label:m,backgroundColor:PAL[j],data:labels.map(l=>{const a=groupAgg(keys,vals(gt,m,idx)).find(x=>x[0]===l);return a?a[1]:null;})}))},options:baseOpts()});
+    }
+    if(dap){
+      const {c,cv}=card('Quality build-up vs days after planting','Mean per 20-day bin');
+      g.append(c);
+      const bins=d=>isNum(d)?Math.floor(d/20)*20:null;
+      const ks=dap.map(bins);
+      const labs=[...new Set(ks.filter(k=>k!=null))].sort((a,b)=>a-b);
+      mk(cv,{type:'line',data:{labels:labs,datasets:metrics.map((m,j)=>({label:m,borderColor:PAL[j],backgroundColor:PAL[j],tension:.25,spanGaps:true,
+        data:labs.map(l=>{const a=groupAgg(ks,vals(gt,m,idx)).find(x=>x[0]===l);return a?a[1]:null;})}))},options:baseOpts()});
+    }
+    if(gt.data['Variety Number']){
+      const {c,cv}=card('Quality by variety','Average CCS / Brix per variety','span2');
+      g.append(c);
+      const keys=vals(gt,'Variety Number',idx);
+      const labels=[...new Set(keys.filter(Boolean))].sort();
+      const ms=['CCS','Brix'].filter(m=>gt.data[m]);
+      mk(cv,{type:'bar',data:{labels,datasets:ms.map((m,j)=>({label:m,backgroundColor:PAL[j+2],data:labels.map(l=>{const a=groupAgg(keys,vals(gt,m,idx)).find(x=>x[0]===l);return a?a[1]:null;})}))},options:baseOpts()});
+    }
+  }
+
+  /* Satellite indices */
+  const sats=S.filter(s=>hasCols(s,'NDVI_Mean','Days After Planting (DAP)'));
+  if(sats.length){
+    const common=colNames(sats[0]).filter(n=>/_Mean$/.test(n)&&/(NDVI|EVI|SAVI|NDMI|NDRE|GNDVI|NDWI|MSAVI|OSAVI|CI_)/.test(n)&&sats.every(s=>s.data[n]));
+    const {c,cv}=card('Vegetation index through the season','Mean per 20-day bin of days after planting, one line per satellite source','span2');
+    const sel=el('select',{onchange:draw},...common.map(n=>el('option',{value:n},n)));
+    c.insertBefore(el('div',{class:'ctrl'},el('div',{},el('span',{},'Index'),sel)),c.querySelector('.chartbox'));
+    g.append(c);
+    let ch;
+    function draw(){
+      if(ch){ch.destroy();charts.splice(charts.indexOf(ch),1);}
+      const m=sel.value;const bins=d=>isNum(d)&&d>=0?Math.floor(d/20)*20:null;
+      const labs=new Set();
+      const series=sats.map((s,j)=>{const idx=idxOf(s);const ks=vals(s,'Days After Planting (DAP)',idx).map(bins);
+        const a=groupAgg(ks,vals(s,m,idx));a.forEach(([k])=>labs.add(k));return {s,a:new Map(a),j};});
+      const L=[...labs].sort((a,b)=>a-b);
+      ch=mk(cv,{type:'line',data:{labels:L,datasets:series.map(({s,a,j})=>({label:short(s.name),borderColor:PAL[j],backgroundColor:PAL[j],tension:.25,spanGaps:true,pointRadius:2,data:L.map(l=>a.has(l)?a.get(l):null)}))},
+        options:baseOpts({scales:{x:{title:{display:true,text:'Days after planting',color:'#94a3b8'},ticks:{color:'#94a3b8'},grid:{color:'rgba(148,163,184,.15)'}},y:{title:{display:true,text:m,color:'#94a3b8'},ticks:{color:'#94a3b8'},grid:{color:'rgba(148,163,184,.15)'}}}})});
+    }
+    draw();
+    if(sats.every(s=>s.data['Crop_Stage'])){
+      const {c:c2,cv:cv2}=card('NDVI by crop stage','Average NDVI per growth stage and satellite source');
+      g.append(c2);
+      const order=new Map();
+      sats.forEach(s=>groupAgg(vals(s,'Crop_Stage',idxOf(s)),vals(s,'Days After Planting (DAP)',idxOf(s))).forEach(([k,v])=>order.set(k,((order.get(k)||v)+v)/2)));
+      const labs=[...order.keys()].sort((a,b)=>order.get(a)-order.get(b));
+      mk(cv2,{type:'bar',data:{labels:labs,datasets:sats.map((s,j)=>{const idx=idxOf(s);const a=new Map(groupAgg(vals(s,'Crop_Stage',idx),vals(s,'NDVI_Mean',idx)));
+        return {label:short(s.name),backgroundColor:PAL[j],data:labs.map(l=>a.has(l)?a.get(l):null)};})},options:baseOpts()});
+    }
+  }
+
+  /* Weather */
+  const wx=S.find(s=>s.data['Average Rainfall_Daily']||s.data['Average Temperature_Max']);
+  if(wx){
+    const dcol=colFind(wx,/date/i)&&colType(wx,colFind(wx,/date/i))==='date'?colFind(wx,/date/i):wx.cols.find(c=>c.type==='date')?.name;
+    const idx=idxOf(wx);
+    const rain=wx.data['Average Rainfall_Daily']?vals(wx,'Average Rainfall_Daily',idx):null;
+    const tmx=wx.data['Average Temperature_Max']?vals(wx,'Average Temperature_Max',idx):null;
+    const tmn=wx.data['Average Temperature_Min']?vals(wx,'Average Temperature_Min',idx):null;
+    const kk=el('div',{class:'kpis',style:'grid-column:1/-1;margin:0'});
+    kk.append(kpi('Weather days',idx.length),
+      rain?kpi('Total rainfall (avg src)',fmt(sum(rain),1)+' mm'):null,
+      tmx?kpi('Avg Tmax',fmt(mean(tmx),1)+' °C'):null,
+      tmn?kpi('Avg Tmin',fmt(mean(tmn),1)+' °C'):null,
+      wx.data['Rain_Status']?kpi('Rainy days',vals(wx,'Rain_Status',idx).filter(v=>v&&!/no rain/i.test(v)).length):null);
+    g.append(kk);
+    if(dcol){
+      const months=vals(wx,dcol,idx).map(d=>d?d.slice(0,7):null);
+      const L=[...new Set(months.filter(Boolean))].sort();
+      const {c,cv}=card('Monthly climate','Rainfall (bars, total mm) and temperature (lines, mean °C)','span2');
+      g.append(c);
+      const ds=[];
+      if(rain){const a=new Map(groupAgg(months,rain,'sum'));ds.push({type:'bar',label:'Rainfall (mm)',yAxisID:'y',backgroundColor:'#60a5fa99',data:L.map(l=>a.get(l)??null)});}
+      if(tmx){const a=new Map(groupAgg(months,tmx));ds.push({type:'line',label:'Tmax',yAxisID:'y1',borderColor:'#dc2626',backgroundColor:'#dc2626',tension:.25,data:L.map(l=>a.get(l)??null)});}
+      if(tmn){const a=new Map(groupAgg(months,tmn));ds.push({type:'line',label:'Tmin',yAxisID:'y1',borderColor:'#0891b2',backgroundColor:'#0891b2',tension:.25,data:L.map(l=>a.get(l)??null)});}
+      const o=baseOpts();o.scales.y={position:'left',title:{display:true,text:'mm',color:'#94a3b8'},ticks:{color:'#94a3b8'},grid:{color:'rgba(148,163,184,.15)'}};
+      o.scales.y1={position:'right',title:{display:true,text:'°C',color:'#94a3b8'},ticks:{color:'#94a3b8'},grid:{drawOnChartArea:false}};
+      mk(cv,{data:{labels:L,datasets:ds},options:o});
+
+      const avgCols=colNames(wx).filter(n=>/^Average /.test(n)&&colType(wx,n)==='numeric');
+      if(avgCols.length){
+        const {c:c2,cv:cv2}=card('Weather explorer','Monthly value of any averaged weather variable');
+        const sel=el('select',{onchange:draw2},...avgCols.map(n=>el('option',{value:n},n.replace('Average ',''))));
+        c2.insertBefore(el('div',{class:'ctrl'},el('div',{},el('span',{},'Variable'),sel)),c2.querySelector('.chartbox'));
+        g.append(c2);let ch2;
+        function draw2(){
+          if(ch2){ch2.destroy();charts.splice(charts.indexOf(ch2),1);}
+          const m=sel.value;const agg=/Rainfall_Daily/.test(m)?'sum':'mean';
+          const a=new Map(groupAgg(months,vals(wx,m,idx),agg));
+          ch2=mk(cv2,{type:'line',data:{labels:L,datasets:[{label:m+(agg==='sum'?' (monthly total)':' (monthly mean)'),borderColor:PAL[4],backgroundColor:PAL[4]+'33',fill:true,tension:.25,data:L.map(l=>a.get(l)??null)}]},options:baseOpts()});
+        }
+        draw2();
+      }
+    }
+  }
+
+  /* Variety master */
+  const vm=S.find(s=>/variety/i.test(s.name)&&s.data['Variety Number']);
+  if(vm){
+    const want=['Priority','Variety (full)','Breeding_Program','Maturity Group','Typical Harvest Age (Days)','Juice Sucrose (%)','Red Rot Resistance','Smut Resistance','Recommended Zone'].filter(c=>vm.data[c]);
+    const cols=want.length?want:colNames(vm).slice(0,8);
+    const idx=idxOf(vm);
+    const c=el('div',{class:'card span3'},el('h3',{},'Variety master'),el('p',{class:'sub'},`${idx.length} varieties`));
+    const t=el('table',{},el('thead',{},el('tr',{},cols.map(x=>el('th',{},x)))),
+      el('tbody',{},idx.map(i=>el('tr',{},cols.map(x=>el('td',{},fmt(vm.data[x][i])))))));
+    c.append(el('div',{class:'tablewrap'},t));
+    g.append(c);
+  }
+
+  frag.push(g);
+  return frag;
+}
+
+/* ---------- Sheet explorer ---------- */
+function sheetView(s){
+  const idx=idxOf(s);
+  const out=[];
+  const numCols=s.cols.filter(c=>c.type==='numeric').length;
+  const fill=s.cols.length?mean(s.cols.map(c=>c.filled))*100:0;
+  out.push(el('div',{class:'kpis'},kpi('Rows',idx.length.toLocaleString(),idx.length!==s.nrows?`of ${s.nrows.toLocaleString()} (filtered)`:null),
+    kpi('Columns',s.cols.length),kpi('Numeric cols',numCols),kpi('Avg filled',fill.toFixed(0)+'%')));
+
+  /* chart builder */
+  const types=['Histogram','Scatter','Line (X → avg Y)','Bar (category → Y)','Category counts'];
+  const numNames=s.cols.filter(c=>c.type==='numeric').map(c=>c.name);
+  const catNames=s.cols.filter(c=>c.type==='cat').map(c=>c.name);
+  const all=colNames(s);
+  const sel=(opts,def)=>{const e=el('select',{onchange:draw},...opts.map(o=>el('option',{value:o},o)));if(def&&opts.includes(def))e.value=def;return e;};
+  const tSel=sel(types);
+  const pick=(re,arr,fb)=>arr.find(n=>re.test(n))||arr[fb]||arr[0];
+  const xSel=sel(all,pick(/NDVI|Brix|DAP|Days After/i,numNames,0));
+  const ySel=sel(numNames,pick(/NDVI|Pol|Brix|CCS/i,numNames,1));
+  const gSel=sel(['(none)',...catNames],(catNames.includes('Variety Number')?'Variety Number':'(none)'));
+  const aSel=sel(['mean','sum','count','max','min']);
+  const bins=el('input',{type:'number',value:20,min:5,max:100,style:'width:70px',onchange:draw});
+  const {c:bc,cv:bcv}=card('Chart builder','Pick a chart type and columns — respects the global filters','span3');
+  bc.insertBefore(el('div',{class:'ctrl'},
+    el('div',{},el('span',{},'Chart'),tSel),el('div',{},el('span',{},'X'),xSel),el('div',{},el('span',{},'Y (numeric)'),ySel),
+    el('div',{},el('span',{},'Group / colour'),gSel),el('div',{},el('span',{},'Aggregate'),aSel),el('div',{},el('span',{},'Bins'),bins)),bc.querySelector('.chartbox'));
+  bc.querySelector('.chartbox').style.height='340px';
+  out.push(bc);
+  let bch;
+  function groupsOf(){
+    const g=gSel.value;if(g==='(none)'||!s.data[g])return [{name:'All',rows:idx}];
+    const m=new Map();idx.forEach(i=>{const k=s.data[g][i]??'n/a';if(!m.has(k))m.set(k,[]);m.get(k).push(i);});
+    return [...m].sort((a,b)=>b[1].length-a[1].length).slice(0,8).map(([name,rows])=>({name,rows}));
+  }
+  function draw(){
+    if(bch){bch.destroy();charts.splice(charts.indexOf(bch),1);}
+    const t=tSel.value,x=xSel.value,y=ySel.value,agg=aSel.value;
+    const X=s.data[x],Y=s.data[y];const grps=groupsOf();
+    const ax=(txt)=>({title:{display:!!txt,text:txt,color:'#94a3b8'},ticks:{color:'#94a3b8',maxRotation:60},grid:{color:'rgba(148,163,184,.15)'}});
+    let cfg;
+    if(t==='Histogram'){
+      const nv=nums(idx.map(i=>X[i]));
+      if(!nv.length){bch=null;return;}
+      const lo=Math.min(...nv),hi=Math.max(...nv),nb=Math.max(2,+bins.value||20),w=(hi-lo)/nb||1;
+      const labels=Array.from({length:nb},(_,k)=>fmt(lo+k*w,3));
+      cfg={type:'bar',data:{labels,datasets:grps.map((g,j)=>{const cnt=new Array(nb).fill(0);g.rows.forEach(i=>{const v=X[i];if(isNum(v))cnt[Math.min(nb-1,Math.floor((v-lo)/w))]++;});
+        return {label:g.name,data:cnt,backgroundColor:PAL[j%PAL.length]};})},options:baseOpts({scales:{x:Object.assign(ax(x),{stacked:true}),y:Object.assign(ax('count'),{stacked:true})}})};
+    } else if(t==='Scatter'){
+      cfg={type:'scatter',data:{datasets:grps.map((g,j)=>({label:g.name,backgroundColor:PAL[j%PAL.length]+'99',pointRadius:3,
+        data:g.rows.filter(i=>isNum(X[i])&&isNum(Y[i])).map(i=>({x:X[i],y:Y[i]}))}))},options:baseOpts({scales:{x:ax(x),y:ax(y)}})};
+    } else if(t==='Line (X → avg Y)'){
+      let keyf=i=>X[i];
+      if(colType(s,x)==='numeric'){const nv=nums(idx.map(i=>X[i]));const lo=Math.min(...nv),hi=Math.max(...nv);
+        if(new Set(nv).size>60){const w=(hi-lo)/40||1;keyf=i=>isNum(X[i])?+(lo+Math.floor((X[i]-lo)/w)*w).toFixed(3):null;}}
+      const maps=grps.map(g=>new Map(groupAgg(g.rows.map(keyf),g.rows.map(i=>Y[i]),agg==='count'?'count':agg)));
+      const L=[...new Set(maps.flatMap(m=>[...m.keys()]))].sort((a,b)=>cmpMix([a],[b]));
+      cfg={type:'line',data:{labels:L,datasets:grps.map((g,j)=>({label:g.name,borderColor:PAL[j%PAL.length],backgroundColor:PAL[j%PAL.length],tension:.2,spanGaps:true,pointRadius:2,data:L.map(l=>maps[j].has(l)?maps[j].get(l):null)}))},
+        options:baseOpts({scales:{x:ax(x),y:ax(agg+' of '+y)}})};
+    } else if(t==='Bar (category → Y)'){
+      const maps=grps.map(g=>new Map(groupAgg(g.rows.map(i=>X[i]),g.rows.map(i=>Y[i]),agg)));
+      let L=[...new Set(maps.flatMap(m=>[...m.keys()]))];
+      L=L.sort((a,b)=>cmpMix([a],[b])).slice(0,60);
+      cfg={type:'bar',data:{labels:L,datasets:grps.map((g,j)=>({label:g.name,backgroundColor:PAL[j%PAL.length],data:L.map(l=>maps[j].has(l)?maps[j].get(l):null)}))},options:baseOpts({scales:{x:ax(x),y:ax(agg+' of '+y)}})};
+    } else {
+      const maps=grps.map(g=>new Map(groupAgg(g.rows.map(i=>X[i]),null,'count')));
+      let L=[...new Set(maps.flatMap(m=>[...m.keys()]))].sort((a,b)=>cmpMix([a],[b])).slice(0,60);
+      cfg={type:'bar',data:{labels:L,datasets:grps.map((g,j)=>({label:g.name,backgroundColor:PAL[j%PAL.length],data:L.map(l=>maps[j].get(l)||0)}))},options:baseOpts({scales:{x:Object.assign(ax(x),{stacked:true}),y:Object.assign(ax('count'),{stacked:true})}})};
+    }
+    bch=mk(bcv,cfg);
+  }
+  draw();
+
+  /* column profile */
+  const pc=el('div',{class:'card span3'},el('h3',{},'Column profile'),el('p',{class:'sub'},'Type, completeness and range of every column'));
+  const pt=el('table',{},el('thead',{},el('tr',{},['Column','Type','Filled','Unique','Min','Mean','Max'].map(h=>el('th',{},h)))),
+    el('tbody',{},s.cols.map(c=>el('tr',{},
+      el('td',{},c.name,c.derived?el('span',{class:'pill',style:'margin-left:6px'},'derived'):null),el('td',{},c.type),
+      el('td',{},el('span',{class:'fillbar'},el('i',{style:`width:${(c.filled*100).toFixed(0)}%`})),' '+(c.filled*100).toFixed(0)+'%'),
+      el('td',{},c.unique),el('td',{},fmt(c.min)),el('td',{},fmt(c.mean)),el('td',{},fmt(c.max))))));
+  pc.append(el('div',{class:'tablewrap'},pt));
+  out.push(pc);
+
+  /* data table */
+  out.push(dataTable(s,idx));
+  return out;
+}
+
+function dataTable(s,idx){
+  const names=colNames(s);
+  let page=0,q='',sortCol=null,asc=true;const PS=25;
+  const card=el('div',{class:'card span3'});
+  const search=el('input',{type:'text',placeholder:'Search rows…',oninput:e=>{q=e.target.value.toLowerCase();page=0;draw();}});
+  const dl=el('button',{class:'btn',onclick:()=>download(s,rows())},'Download CSV (filtered)');
+  card.append(el('h3',{},'Data'),el('div',{class:'ctrl',style:'margin-top:6px'},search,dl));
+  const wrap=el('div',{class:'tablewrap'});const pager=el('div',{class:'pager'});
+  card.append(wrap,pager);
+  function rows(){
+    let r=idx;
+    if(q)r=r.filter(i=>names.some(n=>{const v=s.data[n][i];return v!=null&&String(v).toLowerCase().includes(q);}));
+    if(sortCol){const d=s.data[sortCol];r=[...r].sort((a,b)=>{const x=d[a],y=d[b];if(x==null)return 1;if(y==null)return -1;
+      return (typeof x==='number'&&typeof y==='number'?x-y:String(x).localeCompare(String(y),undefined,{numeric:true}))*(asc?1:-1);});}
+    return r;
+  }
+  function draw(){
+    const r=rows();const pages=Math.max(1,Math.ceil(r.length/PS));page=Math.min(page,pages-1);
+    const slice=r.slice(page*PS,page*PS+PS);
+    wrap.innerHTML='';
+    wrap.append(el('table',{},el('thead',{},el('tr',{},names.map(n=>el('th',{onclick:()=>{if(sortCol===n)asc=!asc;else{sortCol=n;asc=true;}draw();}},n+(sortCol===n?(asc?' ▲':' ▼'):''))))),
+      el('tbody',{},slice.map(i=>el('tr',{},names.map(n=>el('td',{},fmt(s.data[n][i],4))))))));
+    pager.innerHTML='';
+    pager.append(el('button',{class:'btn',onclick:()=>{page=Math.max(0,page-1);draw();}},'‹ Prev'),
+      `Page ${page+1} / ${pages} · ${r.length.toLocaleString()} rows`,
+      el('button',{class:'btn',onclick:()=>{page=Math.min(pages-1,page+1);draw();}},'Next ›'));
+  }
+  draw();return card;
+}
+function download(s,r){
+  const names=colNames(s);const esc=v=>{if(v==null)return '';v=String(v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};
+  const csv=[names.map(esc).join(','),...r.map(i=>names.map(n=>esc(s.data[n][i])).join(','))].join('\n');
+  const a=el('a',{href:URL.createObjectURL(new Blob([csv],{type:'text/csv'})),download:s.name+'.csv'});a.click();
+}
+
+/* ---------- Relations: satellites vs weather / ground truth ---------- */
+const DAY=86400000;
+const dms=d=>d?Date.parse(String(d).slice(0,10)+'T00:00:00Z'):null;
+const IDX_RE=/(NDVI|EVI|SAVI|NDMI|NDRE|GNDVI|NDWI|MSAVI|OSAVI|CI_|GVMI|MSI|PSRI|SIPI)/;
+const relState={tol:7,aW:'Average Temperature_Max',aI:'NDVI_Mean',tlI:'NDVI_Mean',bI:'NDVI_Mean',bM:'Brix'};
+function pearson(xs,ys){let n=0,sx=0,sy=0,sxx=0,syy=0,sxy=0;
+  for(let i=0;i<xs.length;i++){const x=xs[i],y=ys[i];if(!isNum(x)||!isNum(y))continue;n++;sx+=x;sy+=y;sxx+=x*x;syy+=y*y;sxy+=x*y;}
+  if(n<5)return {r:null,n};const vx=sxx-sx*sx/n,vy=syy-sy*sy/n;if(vx<=1e-12||vy<=1e-12)return {r:null,n};
+  return {r:(sxy-sx*sy/n)/Math.sqrt(vx*vy),n};}
+function regress(pts){const n=pts.length;if(n<3)return null;let sx=0,sy=0,sxx=0,sxy=0;pts.forEach(p=>{sx+=p.x;sy+=p.y;sxx+=p.x*p.x;sxy+=p.x*p.y;});
+  const d=n*sxx-sx*sx;if(Math.abs(d)<1e-12)return null;const b=(n*sxy-sx*sy)/d,a=(sy-b*sx)/n;
+  const xs=pts.map(p=>p.x),lo=Math.min(...xs),hi=Math.max(...xs);return [{x:lo,y:a+b*lo},{x:hi,y:a+b*hi}];}
+const idxCols=s=>colNames(s).filter(n=>colType(s,n)==='numeric'&&IDX_RE.test(n)&&(/_Mean$/.test(n)||/^(PSRI|SIPI)$/.test(n))&&(s.cols.find(c=>c.name===n).filled>0.2));
+const rlabel=n=>n.replace(/_Mean$/,'').replace(/^Average /,'').replace(/_/g,' ');
+function heat(rows,cols,get,onClick){
+  const t=el('table',{class:'heat'},el('thead',{},el('tr',{},el('th',{},''),cols.map(c=>el('th',{title:c,onclick:null},rlabel(c))))));
+  const tb=el('tbody');
+  rows.forEach(r=>{const tr=el('tr',{},el('td',{},rlabel(r)));
+    cols.forEach(c=>{const {r:v,n}=get(r,c);
+      const td=el('td',{class:'c',title:v==null?`not enough data (n=${n})`:`r = ${v.toFixed(3)}  ·  n = ${n}`,onclick:()=>onClick(r,c)},v==null?'–':v.toFixed(2));
+      if(v!=null){const a=Math.min(1,Math.abs(v))*.85;td.style.background=v>0?`rgba(37,99,235,${a})`:`rgba(220,38,38,${a})`;if(a>.5)td.style.color='#fff';}
+      else td.style.color='#94a3b8';
+      tr.append(td);});
+    tb.append(tr);});
+  t.append(tb);return el('div',{class:'tablewrap'},t);
+}
+function topList(entries,minN){
+  const e=entries.filter(x=>x.r!=null&&x.n>=minN).sort((a,b)=>Math.abs(b.r)-Math.abs(a.r)).slice(0,6);
+  if(!e.length)return el('p',{class:'note'},'Not enough overlapping data.');
+  return el('ol',{class:'top3'},e.map(x=>el('li',{},el('b',{class:x.r>0?'pos':'neg'},(x.r>0?'+':'')+x.r.toFixed(2)),'  ',rlabel(x.a),' ↔ ',rlabel(x.b),el('span',{class:'note'},`  (n=${x.n})`))));
+}
+const selEl=(opts,val,fn,lab)=>{const s=el('select',{onchange:e=>fn(e.target.value)},...opts.map(o=>el('option',{value:o,...(o===val?{selected:''}:{})},rlabel(o))));s.value=val;return el('div',{},el('span',{},lab),s);};
+
+const relBlocks={};
+const dateKey=d=>d?String(d).slice(0,10):null;
+const pickList=(v,list)=>list.includes(v)?v:list[0];
+const LETTER=['A','B','C'];
+function satSelect(sats,st){
+  const s=el('select',{onchange:e=>{st.sat=+e.target.value;render();}},...sats.map((x,i)=>el('option',{value:i},short(x.name))));
+  s.value=st.sat;return el('div',{},el('span',{},'Satellite'),s);
+}
+function scatterOpts(xl,yl){
+  const ax=t=>({title:{display:true,text:t,color:'#94a3b8'},ticks:{color:'#94a3b8'},grid:{color:'rgba(148,163,184,.15)'}});
+  return baseOpts({scales:{x:ax(xl),y:ax(yl)}});
+}
+function setChart(holder,cv,cfg){
+  if(holder.c){holder.c.destroy();const k=charts.indexOf(holder.c);if(k>=0)charts.splice(k,1);}
+  holder.c=mk(cv,cfg);
+}
+
+/* ---- weather relation: one satellite vs weather (joined on date) ---- */
+function weatherBlock(n,st,sats,wx){
+  const s=sats[st.sat],cols=idxCols(s);
+  const wmap=new Map();wx.data['Weather_Date'].forEach((d,i)=>{if(d)wmap.set(dateKey(d),i);});
+  const WV=colNames(wx).filter(c=>colType(wx,c)==='numeric'&&(/^Average /.test(c)||c==='Cumulative_Rainfall'));
+  st.w=pickList(st.w,WV);st.i=pickList(st.i,cols);st.tl=pickList(st.tl,cols);
+  const dcol=s.data['Satellite Observation_Date'],m=new Map();
+  idxOf(s).forEach(i=>{const d=dateKey(dcol[i]);if(!d||!wmap.has(d))return;
+    let e=m.get(d);if(!e){e={d,w:wmap.get(d),sum:{},cnt:{}};m.set(d,e);}
+    cols.forEach(c=>{const v=s.data[c][i];if(isNum(v)){e.sum[c]=(e.sum[c]||0)+v;e.cnt[c]=(e.cnt[c]||0)+1;}});});
+  const rows=[...m.values()].sort((a,b)=>a.d<b.d?-1:1).map(e=>({d:e.d,w:e.w,mean:Object.fromEntries(cols.map(c=>[c,e.cnt[c]?e.sum[c]/e.cnt[c]:null]))}));
+  const nodes=[el('h2',{style:n>1?'margin-top:34px':''},`Relation ${n} · ${short(s.name)} ↔ Weather`),
+    el('div',{class:'ctrl'},satSelect(sats,st))];
+  const entries=[];
+  const hc=el('div',{class:'card span3'},el('h3',{},'Correlation heatmap'),
+    el('p',{class:'sub'},`${rows.length} observation dates matched with weather (satellite values averaged over all plots per date) · rows = vegetation indices, columns = weather variables · click a cell to plot it`),
+    el('div',{class:'legend'},'r = −1',el('i'),'r = +1'));
+  hc.append(heat(cols,WV,(i,w)=>{const p=pearson(rows.map(r=>r.mean[i]),rows.map(r=>wx.data[w][r.w]));entries.push({a:i,b:w,...p});return p;},
+    (i,w)=>{st.i=i;st.w=w;draw();document.getElementById('sc-'+n).scrollIntoView({behavior:'smooth',block:'center'});}));
+  const tc=el('div',{class:'card'},el('h3',{},'Strongest relationships'),el('p',{class:'sub'},'Top 6 by |r| (n ≥ 8 dates)'),topList(entries,8));
+  const ex=el('div',{class:'card span2',id:'sc-'+n},el('h3',{},'Explorer — weather vs index'),el('p',{class:'sub',id:'st-'+n}));
+  const ctl=el('div',{class:'ctrl'});const cv=el('canvas');const hold={};
+  ex.append(ctl,el('div',{class:'chartbox',style:'height:320px'},cv));
+  function draw(){
+    ctl.innerHTML='';ctl.append(selEl(WV,st.w,v=>{st.w=v;draw();},'Weather variable (X)'),selEl(cols,st.i,v=>{st.i=v;draw();},'Satellite index (Y)'));
+    const pts=rows.map(r=>({x:wx.data[st.w][r.w],y:r.mean[st.i],d:r.d})).filter(p=>isNum(p.x)&&isNum(p.y));
+    const {r,n:nn}=pearson(pts.map(p=>p.x),pts.map(p=>p.y));
+    document.getElementById('st-'+n).textContent=`r = ${r==null?'–':r.toFixed(3)}  ·  R² = ${r==null?'–':(r*r).toFixed(3)}  ·  n = ${nn} dates`;
+    const ds=[{type:'scatter',label:short(s.name),data:pts,backgroundColor:PAL[st.sat]+'bb',pointRadius:4}];
+    const ln=regress(pts);if(ln)ds.push({type:'line',label:'Linear fit',data:ln,borderColor:PAL[st.sat],borderWidth:2,borderDash:[6,4],pointRadius:0});
+    const o=scatterOpts(rlabel(st.w),rlabel(st.i));
+    o.plugins.tooltip={callbacks:{label:c=>`${fmt(c.raw.x,3)}, ${fmt(c.raw.y,3)}${c.raw.d?'  ·  '+c.raw.d:''}`}};
+    setChart(hold,cv,{data:{datasets:ds},options:o});
+  }
+  const tl=el('div',{class:'card span3'},el('h3',{},'Timeline — index vs rainfall'),el('p',{class:'sub'},'Index (mean across plots per observation date, line) over daily rainfall (bars)'));
+  const ctl2=el('div',{class:'ctrl'});const cv2=el('canvas');const hold2={};
+  tl.append(ctl2,el('div',{class:'chartbox',style:'height:300px'},cv2));
+  function drawTl(){
+    ctl2.innerHTML='';ctl2.append(selEl(cols,st.tl,v=>{st.tl=v;drawTl();},'Satellite index'));
+    const wd=wx.data['Weather_Date'].map(dateKey);
+    const dates=new Set(wd.filter(Boolean));
+    const sat=new Map();rows.forEach(r=>sat.set(r.d,r.mean[st.tl]));
+    // include satellite dates outside the weather window too
+    const dc=s.data['Satellite Observation_Date'];const acc=new Map();
+    idxOf(s).forEach(i=>{const d=dateKey(dc[i]),v=s.data[st.tl][i];if(!d||!isNum(v))return;const a=acc.get(d)||[0,0];a[0]+=v;a[1]++;acc.set(d,a);dates.add(d);});
+    const L=[...dates].sort();
+    const rain=new Map();if(wx.data['Average Rainfall_Daily'])wd.forEach((d,i)=>{if(d)rain.set(d,wx.data['Average Rainfall_Daily'][i]);});
+    const ds=[{type:'line',label:rlabel(st.tl),yAxisID:'y',borderColor:PAL[st.sat],backgroundColor:PAL[st.sat],spanGaps:true,pointRadius:2,tension:.2,data:L.map(d=>acc.has(d)?acc.get(d)[0]/acc.get(d)[1]:null)},
+      {type:'bar',label:'Rainfall (mm/day)',yAxisID:'y1',backgroundColor:'#60a5fa88',data:L.map(d=>rain.has(d)?rain.get(d):null),order:9}];
+    const o=baseOpts();
+    o.scales.y={position:'left',title:{display:true,text:rlabel(st.tl),color:'#94a3b8'},ticks:{color:'#94a3b8'},grid:{color:'rgba(148,163,184,.15)'}};
+    o.scales.y1={position:'right',title:{display:true,text:'mm',color:'#94a3b8'},ticks:{color:'#94a3b8'},grid:{drawOnChartArea:false}};
+    o.scales.x.ticks.autoSkip=true;o.scales.x.ticks.maxTicksLimit=14;
+    setChart(hold2,cv2,{data:{labels:L,datasets:ds},options:o});
+  }
+  nodes.push(el('div',{class:'grid'},hc,tc,ex,tl));
+  setTimeout(()=>{draw();drawTl();},0);
+  const best=entries.filter(e=>e.r!=null&&e.n>=8).sort((a,b)=>Math.abs(b.r)-Math.abs(a.r))[0];
+  return {nodes,kpi:kpi(`Relation ${n}`,best?(best.r>0?'+':'')+best.r.toFixed(2):'–',`${short(s.name)} ↔ Weather${best?' · '+rlabel(best.a)+' / '+rlabel(best.b):''}`)};
+}
+
+/* ---- ground-truth relation: one satellite vs Brix/Pol/CCS… (plot + nearest date) ---- */
+function gtBlock(n,st,sats,gt){
+  const s=sats[st.sat],cols=idxCols(s);
+  const GM=['Brix','Pol','CCS','Purity','Fiber','Moisture_Content'].filter(m=>gt.data[m]&&gt.cols.find(c=>c.name===m).filled>0.3);
+  st.m=pickList(st.m,GM);st.i=pickList(st.i,cols);
+  const byPlot=new Map(),sd=s.data['Satellite Observation_Date'];
+  idxOf(s).forEach(i=>{const p=s.data['Plot_ID'][i],d=dms(sd[i]);if(!p||d==null)return;if(!byPlot.has(p))byPlot.set(p,[]);byPlot.get(p).push([d,i]);});
+  const pairs=[];
+  idxOf(gt).forEach(g=>{const p=gt.data['Plot_ID'][g],d=dms(gt.data['Test_Date'][g]);if(!p||d==null)return;const a=byPlot.get(p);if(!a)return;
+    let best=null,bd=Infinity;a.forEach(([x,i])=>{const dd=Math.abs(x-d);if(dd<bd){bd=dd;best=i;}});
+    if(best!=null&&bd<=st.tol*DAY)pairs.push({g,i:best,gap:Math.round(bd/DAY)});});
+  const avgGap=pairs.length?(pairs.reduce((a,p)=>a+p.gap,0)/pairs.length).toFixed(1):'–';
+  const nodes=[el('h2',{style:n>1?'margin-top:34px':''},`Relation ${n} · ${short(s.name)} ↔ Ground truth (${GM.join(' / ')})`),
+    el('div',{class:'ctrl'},satSelect(sats,st),selEl(['3','5','7','10','15'],String(st.tol),v=>{st.tol=+v;render();},'Max days between lab test and satellite pass'))];
+  const entries=[];
+  const hc=el('div',{class:'card span3'},el('h3',{},'Correlation heatmap'),
+    el('p',{class:'sub'},`${pairs.length} of ${idxOf(gt).length} lab samples matched to the same plot’s nearest pass (avg gap ${avgGap} d) · rows = vegetation indices, columns = lab measurements · click a cell to plot it`),
+    el('div',{class:'legend'},'r = −1',el('i'),'r = +1'));
+  hc.append(heat(cols,GM,(i,mm)=>{const p=pearson(pairs.map(q=>s.data[i][q.i]),pairs.map(q=>gt.data[mm][q.g]));entries.push({a:i,b:mm,...p});return p;},
+    (i,mm)=>{st.i=i;st.m=mm;draw();document.getElementById('sc-'+n).scrollIntoView({behavior:'smooth',block:'center'});}));
+  const tc=el('div',{class:'card'},el('h3',{},'Strongest relationships'),el('p',{class:'sub'},'Top 6 by |r| (n ≥ 8 samples)'),topList(entries,8));
+  const ex=el('div',{class:'card span2',id:'sc-'+n},el('h3',{},'Explorer — index vs lab measurement'),el('p',{class:'sub',id:'st-'+n}));
+  const ctl=el('div',{class:'ctrl'});const cv=el('canvas');const hold={};
+  ex.append(ctl,el('div',{class:'chartbox',style:'height:320px'},cv));
+  function draw(){
+    ctl.innerHTML='';ctl.append(selEl(cols,st.i,v=>{st.i=v;draw();},'Satellite index (X)'),selEl(GM,st.m,v=>{st.m=v;draw();},'Lab measurement (Y)'));
+    const all=pairs.map(q=>({x:s.data[st.i][q.i],y:gt.data[st.m][q.g],d:gt.data['Test_Date'][q.g],v:gt.data['Variety Number']?gt.data['Variety Number'][q.g]:null,gap:q.gap})).filter(p=>isNum(p.x)&&isNum(p.y));
+    const {r,n:nn}=pearson(all.map(p=>p.x),all.map(p=>p.y));
+    document.getElementById('st-'+n).textContent=`r = ${r==null?'–':r.toFixed(3)}  ·  R² = ${r==null?'–':(r*r).toFixed(3)}  ·  n = ${nn} samples`;
+    const grp=new Map();all.forEach(p=>{const k=p.v||'samples';if(!grp.has(k))grp.set(k,[]);grp.get(k).push(p);});
+    const ds=[...grp].map(([k,pts],j)=>({type:'scatter',label:`${k} (${pts.length})`,data:pts,backgroundColor:PAL[j%PAL.length]+'bb',pointRadius:4}));
+    const ln=regress(all);if(ln)ds.push({type:'line',label:'Linear fit (all)',data:ln,borderColor:'#94a3b8',borderWidth:2,borderDash:[6,4],pointRadius:0});
+    const o=scatterOpts(rlabel(st.i),st.m);
+    o.plugins.tooltip={callbacks:{label:c=>`${fmt(c.raw.x,3)}, ${fmt(c.raw.y,3)}${c.raw.d?'  ·  tested '+c.raw.d:''}${c.raw.gap!=null?'  ·  pass ±'+c.raw.gap+' d':''}`}};
+    setChart(hold,cv,{data:{datasets:ds},options:o});
+  }
+  nodes.push(el('div',{class:'grid'},hc,tc,ex));
+  setTimeout(draw,0);
+  const best=entries.filter(e=>e.r!=null&&e.n>=8).sort((a,b)=>Math.abs(b.r)-Math.abs(a.r))[0];
+  return {nodes,kpi:kpi(`Relation ${n}`,best?(best.r>0?'+':'')+best.r.toFixed(2):'–',`${short(s.name)} ↔ Ground truth${best?' · '+rlabel(best.a)+' / '+best.b:''}`)};
+}
+
+function relations(){
+  const sats=S.filter(s=>s.data['Satellite Observation_Date']&&s.data['Plot_ID']&&s.data['NDVI_Mean']);
+  const wx=S.find(s=>s.data['Weather_Date']);
+  const gt=S.find(s=>hasCols(s,'Brix','Pol','Test_Date','Plot_ID'));
+  if(!sats.length||!(wx||gt))return [el('div',{class:'empty'},'Relations need satellite sheets (Plot_ID + Satellite Observation_Date + NDVI) plus a weather sheet (Weather_Date) and/or a ground-truth sheet (Test_Date + Brix/Pol).')];
+  const plan=[{kind:'weather',sat:0},{kind:'weather',sat:1},{kind:'gt',sat:2}];
+  const strip=el('div',{class:'kpis'}),body=[];
+  plan.forEach((p,k)=>{
+    if(p.kind==='weather'&&!wx)return;if(p.kind==='gt'&&!gt)return;
+    const st=relBlocks['r'+k]||(relBlocks['r'+k]={sat:Math.min(p.sat,sats.length-1),w:'Average Temperature_Max',i:'NDVI_Mean',m:'Brix',tl:'NDVI_Mean',tol:7});
+    const res=p.kind==='weather'?weatherBlock(k+1,st,sats,wx):gtBlock(k+1,st,sats,gt);
+    strip.append(res.kpi);body.push(...res.nodes);
+  });
+  return [el('p',{class:'note'},'Three relations, each with its own satellite (change it with the dropdown). Values shown in the tiles are the strongest correlation found in each relation. Correlations can be confounded by crop stage / season — check the explorer plots.'),strip,...body];
+}
+
+/* ---------- Prediction: Brix (and Pol/CCS/…) + harvest time from vegetation index + rainfall ---------- */
+const predState={sat:2,target:'Brix',tol:7,idx:null,wv:null,dap:false,dap2:false,lambda:1,thr:null,smooth:3,plot:null,fillPlot:null,fillDate:null,vals:{},obsDate:null,level:'plot',fillVar:null,varSel:'__all',calib:true,model:'ridge',cmp:null,mode:'both',bands:[]};
+function ridgeFit(X,y,lam){
+  const n=X.length,p=X[0].length;
+  const mu=new Array(p).fill(0),sd=new Array(p).fill(0);
+  for(let j=0;j<p;j++){let s=0;for(let r=0;r<n;r++)s+=X[r][j];mu[j]=s/n;let v=0;for(let r=0;r<n;r++)v+=(X[r][j]-mu[j])**2;sd[j]=Math.sqrt(v/n)||1;}
+  const Z=X.map(r=>r.map((v,j)=>(v-mu[j])/sd[j]));
+  const ym=y.reduce((a,b)=>a+b,0)/n;
+  const A=Array.from({length:p},()=>new Array(p+1).fill(0));
+  for(let r=0;r<n;r++)for(let i=0;i<p;i++){A[i][p]+=Z[r][i]*(y[r]-ym);for(let j=0;j<p;j++)A[i][j]+=Z[r][i]*Z[r][j];}
+  for(let i=0;i<p;i++)A[i][i]+=lam;
+  for(let c=0;c<p;c++){                       // gaussian elimination with partial pivoting
+    let m=c;for(let r=c+1;r<p;r++)if(Math.abs(A[r][c])>Math.abs(A[m][c]))m=r;
+    [A[c],A[m]]=[A[m],A[c]];const d=A[c][c]||1e-12;
+    for(let j=c;j<=p;j++)A[c][j]/=d;
+    for(let r=0;r<p;r++)if(r!==c){const f=A[r][c];if(f)for(let j=c;j<=p;j++)A[r][j]-=f*A[c][j];}
+  }
+  const mdl={mu,sd,w:A.map(r=>r[p]),b:ym};mdl.predict=x=>mdl.b+x.reduce((a,v,j)=>a+mdl.w[j]*(v-mdl.mu[j])/mdl.sd[j],0);return mdl;
+}
+const ridgePredict=(m,x)=>m.predict(x);
+
+/* ---------- the 5 ML models (pure JS, no libraries) ---------- */
+const MODELS={ridge:'Ridge regression (linear)',knn:'k-Nearest Neighbours',rf:'Random Forest',gb:'Gradient Boosting',krr:'Kernel Ridge (RBF, SVR-like)'};
+const MODEL_INFO={
+  ridge:'Linear model with L2 shrinkage — simple, stable, easy to interpret.',
+  knn:'Predicts from the most similar past observations (distance-weighted average of the nearest neighbours).',
+  rf:'60 randomised decision trees averaged — captures non-linear effects and interactions, robust on small data.',
+  gb:'Boosted shallow trees (120 rounds, learning rate 0.08) — flexible, often the most accurate, but can overfit small data.',
+  krr:'Kernel ridge with an RBF kernel (similar to a support-vector regressor) — smooth non-linear fit; capped at 150 training rows for speed.'};
+function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function stdz(X){const n=X.length,p=X[0].length,mu=new Array(p).fill(0),sd=new Array(p).fill(1);
+  for(let j=0;j<p;j++){let s=0;for(let r=0;r<n;r++)s+=X[r][j];mu[j]=s/n;let v=0;for(let r=0;r<n;r++)v+=(X[r][j]-mu[j])**2;sd[j]=Math.sqrt(v/n)||1;}
+  return {mu,sd,Z:X.map(r=>r.map((v,j)=>(v-mu[j])/sd[j]))};}
+function gaussSolve(A,n){                       // A is n x (n+1) augmented, solved in place
+  for(let c=0;c<n;c++){let m=c;for(let r=c+1;r<n;r++)if(Math.abs(A[r][c])>Math.abs(A[m][c]))m=r;
+    [A[c],A[m]]=[A[m],A[c]];const d=A[c][c]||1e-12;for(let j=c;j<=n;j++)A[c][j]/=d;
+    for(let r=0;r<n;r++)if(r!==c){const f=A[r][c];if(f)for(let j=c;j<=n;j++)A[r][j]-=f*A[c][j];}}
+  return A.map(r=>r[n]);}
+function buildTree(X,y,idx,depth,opt,rng){
+  const n=idx.length;let tot=0;for(const i of idx)tot+=y[i];const v=tot/n;
+  if(depth>=opt.maxDepth||n<2*opt.minLeaf)return {v};
+  const p=X[0].length;let feats=[...Array(p).keys()];
+  if(opt.mtry&&opt.mtry<p){for(let i=p-1;i>0;i--){const j=Math.floor(rng()*(i+1));[feats[i],feats[j]]=[feats[j],feats[i]];}feats=feats.slice(0,opt.mtry);}
+  let best=null;
+  for(const f of feats){
+    const order=idx.slice().sort((a,b)=>X[a][f]-X[b][f]);let sl=0;
+    for(let k=0;k<n-1;k++){sl+=y[order[k]];const nl=k+1,nr=n-nl;
+      if(X[order[k]][f]===X[order[k+1]][f]||nl<opt.minLeaf||nr<opt.minLeaf)continue;
+      const sr=tot-sl,gain=sl*sl/nl+sr*sr/nr-tot*tot/n;
+      if(!best||gain>best.gain)best={gain,f,thr:(X[order[k]][f]+X[order[k+1]][f])/2};}}
+  if(!best||best.gain<=1e-12)return {v};
+  const L=[],R=[];for(const i of idx)(X[i][best.f]<=best.thr?L:R).push(i);
+  return {f:best.f,t:best.thr,v,l:buildTree(X,y,L,depth+1,opt,rng),r:buildTree(X,y,R,depth+1,opt,rng)};}
+const treePred=(nd,x)=>{while(nd.l)nd=x[nd.f]<=nd.t?nd.l:nd.r;return nd.v;};
+function fitKNN(X,y){const {mu,sd,Z}=stdz(X),k=Math.max(3,Math.min(7,Math.round(Math.sqrt(X.length)/1.8)));
+  return {predict:x=>{const z=x.map((v,j)=>(v-mu[j])/sd[j]);
+    const d=Z.map((r,i)=>[r.reduce((a,v,j)=>a+(v-z[j])**2,0),i]).sort((a,b)=>a[0]-b[0]).slice(0,k);
+    let w=0,s=0;for(const [dd,i] of d){const wi=1/(Math.sqrt(dd)+1e-3);w+=wi;s+=wi*y[i];}return s/w;}};}
+function fitRF(X,y){const n=X.length,p=X[0].length,rng=mulberry(7),trees=[];
+  const opt={maxDepth:7,minLeaf:2,mtry:Math.max(1,Math.ceil(p/2))};
+  for(let t=0;t<60;t++){const idx=Array.from({length:n},()=>Math.floor(rng()*n));trees.push(buildTree(X,y,idx,0,opt,rng));}
+  return {predict:x=>trees.reduce((a,tr)=>a+treePred(tr,x),0)/trees.length};}
+function fitGB(X,y){const n=X.length,rng=mulberry(11),lr=0.08,M=120,F0=y.reduce((a,b)=>a+b,0)/n,F=new Array(n).fill(F0),trees=[];
+  const opt={maxDepth:3,minLeaf:3,mtry:0};
+  for(let m=0;m<M;m++){const r=y.map((v,i)=>v-F[i]),idx=[];for(let i=0;i<n;i++)if(rng()<0.8)idx.push(i);
+    if(idx.length<6)continue;const tr=buildTree(X,r,idx,0,opt,rng);trees.push(tr);for(let i=0;i<n;i++)F[i]+=lr*treePred(tr,X[i]);}
+  return {predict:x=>F0+lr*trees.reduce((a,tr)=>a+treePred(tr,x),0)};}
+function fitKRR(X,y,lam){let Xs=X,ys=y;const cap=150;
+  if(X.length>cap){const step=X.length/cap,keep=[];for(let k=0;k<cap;k++)keep.push(Math.floor(k*step));Xs=keep.map(i=>X[i]);ys=keep.map(i=>y[i]);}
+  const {mu,sd,Z}=stdz(Xs),n=Z.length,p=Z[0].length,g=1/p,ym=ys.reduce((a,b)=>a+b,0)/n;
+  const A=Array.from({length:n},(_,i)=>{const row=new Array(n+1);
+    for(let j=0;j<n;j++){let d=0;for(let c=0;c<p;c++){const q=Z[i][c]-Z[j][c];d+=q*q;}row[j]=Math.exp(-g*d)+(i===j?lam:0);}
+    row[n]=ys[i]-ym;return row;});
+  const alpha=gaussSolve(A,n);
+  return {predict:x=>{const z=x.map((v,j)=>(v-mu[j])/sd[j]);let s=ym;
+    for(let i=0;i<n;i++){let d=0;for(let c=0;c<p;c++){const q=z[c]-Z[i][c];d+=q*q;}s+=alpha[i]*Math.exp(-g*d);}return s;}};}
+function fitModel(kind,X,y,lam){
+  if(kind==='knn')return fitKNN(X,y);
+  if(kind==='rf')return fitRF(X,y);
+  if(kind==='gb')return fitGB(X,y);
+  if(kind==='krr')return fitKRR(X,y,lam);
+  return ridgeFit(X,y,lam);}
+function featImportance(m,X,y,kind){
+  if(kind==='ridge'||!m.predict)return {vals:m.w,signed:true};
+  const rng=mulberry(3),n=X.length,p=X[0].length;
+  const mse=Xt=>{let s=0;for(let i=0;i<n;i++){const e=y[i]-m.predict(Xt[i]);s+=e*e;}return s/n;};
+  const base=mse(X),vals=[];
+  for(let j=0;j<p;j++){let inc=0;for(let r=0;r<3;r++){const col=X.map(row=>row[j]);
+    for(let i=n-1;i>0;i--){const k=Math.floor(rng()*(i+1));[col[i],col[k]]=[col[k],col[i]];}
+    inc+=mse(X.map((row,i)=>{const c=row.slice();c[j]=col[i];return c;}))-base;}
+    vals.push(Math.max(0,inc/3));}
+  return {vals,signed:false};}
+
+function metricsOf(y,p){const k=y.map((_,i)=>i).filter(i=>isNum(p[i]));if(k.length<3)return null;
+  const ym=k.reduce((a,i)=>a+y[i],0)/k.length;let sr=0,st=0,sa=0;k.forEach(i=>{const e=y[i]-p[i];sr+=e*e;st+=(y[i]-ym)**2;sa+=Math.abs(e);});
+  return {n:k.length,r2:st>0?1-sr/st:null,rmse:Math.sqrt(sr/k.length),mae:sa/k.length};}
+function cvPredict(rows,key,lam,kind){
+  const out=new Array(rows.length).fill(null);
+  [...new Set(rows.map(r=>r[key]))].forEach(g=>{
+    const tr=rows.filter(r=>r[key]!==g);if(tr.length<Math.max(8,rows[0].x.length+2))return;
+    const m=fitModel(kind||predState.model,tr.map(r=>r.x),tr.map(r=>r.y),lam);
+    rows.forEach((r,k)=>{if(r[key]===g)out[k]=ridgePredict(m,r.x);});});
+  return out;
+}
+function movAvg(a,k){return a.map((_,i)=>{const lo=Math.max(0,i-Math.floor(k/2)),hi=Math.min(a.length,lo+k);const seg=a.slice(lo,hi).filter(isNum);return seg.length?seg.reduce((x,y)=>x+y,0)/seg.length:null;});}
+
+function prediction(){
+  const sats=S.filter(s=>s.data['Satellite Observation_Date']&&s.data['Plot_ID']&&s.data['NDVI_Mean']);
+  const wx=S.find(s=>s.data['Weather_Date']);
+  const gt=S.find(s=>hasCols(s,'Brix','Test_Date','Plot_ID'));
+  if(!sats.length||!gt)return [el('div',{class:'empty'},'Prediction needs satellite sheets and a ground-truth sheet (Brix + Test_Date + Plot_ID).')];
+  const P=predState;P.sat=Math.min(P.sat,sats.length-1);
+  const s=sats[P.sat];
+  const idxAll=idxCols(s);
+  const WV=wx?colNames(wx).filter(c=>colType(wx,c)==='numeric'&&(/^Average /.test(c)||c==='Cumulative_Rainfall')):[];
+  const TG=['Brix','Pol','CCS','Purity'].filter(m=>gt.data[m]&&gt.cols.find(c=>c.name===m).filled>0.3);
+  if(!TG.includes(P.target))P.target=TG[0];
+  if(!P.idx||P.idx.some(f=>!idxAll.includes(f)))P.idx=['NDVI_Mean','NDRE1_Mean','NDMI_Mean'].filter(f=>idxAll.includes(f)).slice(0,3);
+  if(!P.idx.length)P.idx=idxAll.slice(0,2);
+  if(!P.wv||P.wv.some(f=>!WV.includes(f)))P.wv=['Average Rainfall_7D','Average Rainfall_15D','Average Rainfall_30D'].filter(f=>WV.includes(f));
+  const useWx=P.mode!=='sat'&&WV.length>0;
+  const wvEff=useWx?P.wv:[];
+  const bandsAll=colNames(s).filter(n=>colType(s,n)==='numeric'&&/^B\d{1,2}A?(_Mean)?$/.test(n)&&s.cols.find(c=>c.name===n).filled>0.3);
+  if(!P.bands||P.bands.some(f=>!bandsAll.includes(f)))P.bands=[];
+  const idxF=[...P.idx,...P.bands];
+  const hasDAP=!!s.data['Days After Planting (DAP)'];
+  const feats=[...idxF.map(f=>({k:'idx',n:f})),...wvEff.map(f=>({k:'wx',n:f})),...(P.dap&&hasDAP?[{k:'dap',n:'DAP'}]:[])];
+  const wmap=new Map();if(wx)wx.data['Weather_Date'].forEach((d,i)=>{if(d)wmap.set(dateKey(d),i);});
+  const featRowF=(i,fl)=>{const d=dateKey(s.data['Satellite Observation_Date'][i]);const x=[];
+    for(const f of fl){let v=null;
+      if(f.k==='idx')v=s.data[f.n][i];
+      else if(f.k==='wx'){const w=wmap.get(d);v=w==null?null:wx.data[f.n][w];}
+      else v=s.data['Days After Planting (DAP)'][i];
+      if(!isNum(v))return null;x.push(v);}
+    return x;};
+  const featRow=i=>featRowF(i,feats);
+  /* training rows: lab sample + same plot's nearest satellite pass */
+  const byPlot=new Map();
+  idxOf(s).forEach(i=>{const p=s.data['Plot_ID'][i],d=dms(s.data['Satellite Observation_Date'][i]);if(!p||d==null)return;if(!byPlot.has(p))byPlot.set(p,[]);byPlot.get(p).push([d,i]);});
+  const rows=[];
+  idxOf(gt).forEach(g=>{const p=gt.data['Plot_ID'][g],d=dms(gt.data['Test_Date'][g]),y=gt.data[P.target][g];
+    if(!p||d==null||!isNum(y)||!byPlot.has(p))return;
+    let best=null,bd=Infinity;byPlot.get(p).forEach(([x,i])=>{const dd=Math.abs(x-d);if(dd<bd){bd=dd;best=i;}});
+    if(best==null||bd>P.tol*DAY)return;const x=featRow(best);if(!x)return;
+    rows.push({x,y,plot:p,date:dateKey(gt.data['Test_Date'][g]),variety:gt.data['Variety Number']?gt.data['Variety Number'][g]:null,
+      dap:s.data['Days After Planting (DAP)']?s.data['Days After Planting (DAP)'][best]:null});});
+
+  const out=[];
+  /* controls */
+  const chk=(label,checked,fn)=>el('label',{style:'display:inline-flex;gap:4px;align-items:center;margin-right:12px;font-size:12.5px'},el('input',{type:'checkbox',...(checked?{checked:''}:{}),onchange:e=>fn(e.target.checked)}),label);
+  const toggle=(arr,f,on)=>{const set=new Set(arr);on?set.add(f):set.delete(f);return [...set];};
+  const sat=el('select',{onchange:e=>{P.sat=+e.target.value;P.idx=null;P.wv=null;P.bands=[];P.cmp=null;render();}},...sats.map((x,i)=>el('option',{value:i},short(x.name))));sat.value=P.sat;
+  const tgt=el('select',{onchange:e=>{P.target=e.target.value;P.thr=null;render();}},...TG.map(m=>el('option',{value:m},m)));tgt.value=P.target;
+  const tol=el('select',{onchange:e=>{P.tol=+e.target.value;render();}},...[3,5,7,10,15].map(v=>el('option',{value:v},v+' days')));tol.value=P.tol;
+  const mdl=el('select',{onchange:e=>{P.model=e.target.value;render();}},...Object.entries(MODELS).map(([k,v])=>el('option',{value:k},v)));mdl.value=P.model;
+  const modeSel=el('select',{onchange:e=>{P.mode=e.target.value;P.cmp=null;P.vals={};render();}},el('option',{value:'both'},'Satellite + weather'),el('option',{value:'sat'},'Satellite only (no weather)'));modeSel.value=P.mode==='sat'?'sat':'both';
+  const lam=el('select',{onchange:e=>{P.lambda=+e.target.value;render();}},...[0.01,0.1,1,3,10,30].map(v=>el('option',{value:v},String(v))));lam.value=P.lambda;
+  const cfg=el('div',{class:'card span3'},el('h3',{},'Model setup'),el('p',{class:'sub'},'Ridge regression on standardised features. Pick the satellite, what to predict, and which vegetation indices / rainfall / weather variables to use.'),
+    el('div',{class:'ctrl'},el('div',{},el('span',{},'Satellite'),sat),el('div',{},el('span',{},'Predict'),tgt),el('div',{},el('span',{},'Max gap lab ↔ satellite'),tol),el('div',{},el('span',{},'Inputs'),modeSel),el('div',{},el('span',{},'ML model'),mdl),el('div',{},el('span',{},'λ (Ridge / Kernel ridge only)'),lam)),
+    el('p',{class:'note'},'Model: '+MODEL_INFO[P.model]+' The same model is used for the Brix prediction, the harvest-time model and the input predictor.'),
+    el('div',{style:'margin:6px 0'},el('b',{style:'font-size:12px'},'Vegetation indices:  '),...idxAll.map(f=>chk(rlabel(f),P.idx.includes(f),on=>{P.idx=toggle(P.idx,f,on);render();}))),
+    (WV.length&&useWx)?el('div',{style:'margin:6px 0'},el('b',{style:'font-size:12px'},'Rainfall & weather:  '),...WV.map(f=>chk(rlabel(f),P.wv.includes(f),on=>{P.wv=toggle(P.wv,f,on);render();}))):null,
+    bandsAll.length?el('div',{style:'margin:6px 0'},el('b',{style:'font-size:12px'},'Spectral bands (optional):  '),...bandsAll.map(f=>chk(f.replace(/_Mean$/,''),P.bands.includes(f),on=>{P.bands=toggle(P.bands,f,on);render();}))):null,
+    !useWx?el('p',{class:'note'},'Satellite-only mode: no weather data is used or needed — Brix and harvest time are predicted from the satellite values alone.'):null,
+    hasDAP?el('div',{style:'margin:6px 0'},chk('Add days-after-planting (crop age) as a feature',P.dap,on=>{P.dap=on;render();})):null);
+  out.push(cfg);
+
+  if(feats.length===0||rows.length<12){
+    out.push(el('div',{class:'card span3'},el('p',{class:'note'},`Not enough matched training samples (${rows.length}) for the chosen features — select fewer features or widen the gap.`)));
+    return [el('div',{class:'grid'},...out)];
+  }
+  const lamv=P.lambda;
+  const predPlot=cvPredict(rows,'plot',lamv),predDate=cvPredict(rows,'date',lamv);
+  const y=rows.map(r=>r.y);
+  const mP=metricsOf(y,predPlot),mD=metricsOf(y,predDate);
+  const model=fitModel(P.model,rows.map(r=>r.x),y,lamv);
+  const kp=el('div',{class:'kpis',style:'grid-column:1/-1;margin:0'});
+  const f3=v=>v==null?'–':v.toFixed(2);
+  kp.append(kpi('Training samples',rows.length,`${new Set(rows.map(r=>r.plot)).size} plots · ${new Set(rows.map(r=>r.date)).size} test dates`),
+    kpi(`R² · new plots`,f3(mP&&mP.r2),'leave-one-plot-out'),kpi(`R² · new dates`,f3(mD&&mD.r2),'leave-one-date-out (strict)'),
+    kpi(`RMSE`,f3(mP&&mP.rmse),P.target+' units · plot-out'),kpi('MAE',f3(mP&&mP.mae),P.target+' units · plot-out'));
+  /* actual vs predicted */
+  const c1=el('div',{class:'card span2'},el('h3',{},`Actual vs predicted ${P.target} · ${MODELS[P.model]}`),el('p',{class:'sub'},'Out-of-fold predictions (each plot predicted by a model that never saw it). Dashed line = perfect prediction.'));
+  const cv1=el('canvas');c1.append(el('div',{class:'chartbox',style:'height:320px'},cv1));
+  const lo=Math.min(...y),hi=Math.max(...y);
+  const gv=new Map();rows.forEach((r,k)=>{if(!isNum(predPlot[k]))return;const key=r.variety||'samples';if(!gv.has(key))gv.set(key,[]);gv.get(key).push({x:r.y,y:predPlot[k],d:r.date,p:r.plot});});
+  const ds1=[...gv].map(([k,pts],j)=>({type:'scatter',label:k,data:pts,backgroundColor:PAL[j%PAL.length]+'bb',pointRadius:4}));
+  ds1.push({type:'line',label:'Perfect',data:[{x:lo,y:lo},{x:hi,y:hi}],borderColor:'#94a3b8',borderDash:[6,4],borderWidth:2,pointRadius:0});
+  const o1=scatterOpts('Actual '+P.target,'Predicted '+P.target);
+  o1.plugins.tooltip={callbacks:{label:c=>`actual ${fmt(c.raw.x,2)} → predicted ${fmt(c.raw.y,2)}${c.raw.d?'  ·  '+c.raw.d:''}`}};
+  mk(cv1,{data:{datasets:ds1},options:o1});
+  /* importance */
+  const imp=featImportance(model,rows.map(r=>r.x),y,P.model);
+  const c2=el('div',{class:'card'},el('h3',{},'What drives the prediction'),el('p',{class:'sub'},imp.signed?'Standardised coefficients (blue = raises, red = lowers the prediction)':'Permutation importance — how much the error grows when that input is shuffled'));
+  const cv2=el('canvas');c2.append(el('div',{class:'chartbox',style:'height:320px'},cv2));
+  const order=feats.map((f,j)=>({n:rlabel(f.n),w:imp.vals[j]})).sort((a,b)=>Math.abs(b.w)-Math.abs(a.w));
+  mk(cv2,{type:'bar',data:{labels:order.map(o=>o.n),datasets:[{label:imp.signed?'coefficient':'importance',data:order.map(o=>o.w),backgroundColor:order.map(o=>imp.signed?(o.w>=0?'#2563eb':'#dc2626'):'#7c3aed')}]},options:baseOpts({indexAxis:'y',plugins:{legend:{display:false}}})});
+  out.push(kp,c1,c2);
+
+  /* ---- compare all 5 models on the same data ---- */
+  const cmpKey=JSON.stringify([P.sat,P.target,P.tol,P.mode,idxF,wvEff,P.dap,P.lambda,rows.length]);
+  const cmpCard=el('div',{class:'card span3',id:'cmp'},el('h3',{},'Compare the 5 models'),
+    el('p',{class:'sub'},'Same inputs and validation for every model. “New dates” (leave-one-sampling-date-out) is the strict test and the better guide for forecasting. Click a row to switch to that model.'));
+  const cmpBody=el('div');cmpCard.append(cmpBody);
+  function showCmp(){
+    cmpBody.innerHTML='';
+    if(!P.cmp||P.cmp.key!==cmpKey){cmpBody.append(el('button',{class:'btn',onclick:runCmp},'▶ Run comparison (takes a few seconds)'));return;}
+    const best=Math.max(...P.cmp.res.map(r=>r.r2d==null?-9:r.r2d));
+    const f2=v=>v==null?'–':v.toFixed(2);
+    cmpBody.append(el('div',{class:'tablewrap'},el('table',{},
+      el('thead',{},el('tr',{},['Model','R² · new plots','R² · new dates (strict)','RMSE','MAE','Run time'].map(h=>el('th',{},h)))),
+      el('tbody',{},P.cmp.res.map(r=>el('tr',{style:'cursor:pointer'+(r.kind===P.model?';background:var(--accent-soft)':''),onclick:()=>{P.model=r.kind;render();}},
+        el('td',{},el('b',{},MODELS[r.kind]),r.kind===P.model?el('span',{class:'pill',style:'margin-left:6px'},'in use'):null,(r.r2d!=null&&r.r2d===best)?el('span',{style:'margin-left:6px'},'★ best strict'):null),
+        el('td',{},f2(r.r2p)),el('td',{},f2(r.r2d)),el('td',{},f2(r.rmse)),el('td',{},f2(r.mae)),el('td',{},(r.ms/1000).toFixed(1)+' s')))))));
+    cmpBody.append(el('p',{class:'note',style:'margin-top:6px'},`Predicting ${P.target} from ${feats.length} input(s), ${rows.length} lab samples. Tree models can look better on “new plots” than on “new dates” — trust the strict column.`));
+  }
+  function runCmp(){cmpBody.innerHTML='Running 5 models…';
+    setTimeout(()=>{const res=Object.keys(MODELS).map(kind=>{const t0=performance.now();
+      const a=metricsOf(y,cvPredict(rows,'plot',lamv,kind)),b=metricsOf(y,cvPredict(rows,'date',lamv,kind));
+      return {kind,r2p:a&&a.r2,r2d:b&&b.r2,rmse:a&&a.rmse,mae:a&&a.mae,ms:performance.now()-t0};});
+      P.cmp={key:cmpKey,res};showCmp();},40);}
+  showCmp();out.push(cmpCard);
+
+  /* ===== harvest-time prediction ===== */
+  const tmin=Math.min(...rows.map(r=>r.dap).filter(isNum)),tmax=Math.max(...rows.map(r=>r.dap).filter(isNum));
+  const yLo=Math.min(...y)-0.5,yHi=Math.max(...y)+0.5,clampY=v=>Math.min(yHi,Math.max(yLo,v));
+  const dcol=s.data['Satellite Observation_Date'],dapc=s.data['Days After Planting (DAP)'],hv=s.data['Harvest Date'];
+  const plots=new Map();
+  idxOf(s).forEach(i=>{const p=s.data['Plot_ID'][i],d=dateKey(dcol[i]);if(!p||!d)return;if(!plots.has(p))plots.set(p,{rows:[],harvest:null,variety:null});
+    const e=plots.get(p);e.rows.push({d,i,dap:dapc?dapc[i]:null});if(hv&&hv[i]&&!e.harvest)e.harvest=dateKey(hv[i]);if(s.data['Variety Number']&&!e.variety)e.variety=s.data['Variety Number'][i];});
+  if(P.thr==null){const v=nums(y).sort((a,b)=>a-b);P.thr=+(v[Math.floor(v.length*0.8)]).toFixed(1);}
+  const results=[];
+  plots.forEach((e,p)=>{
+    e.rows.sort((a,b)=>a.d<b.d?-1:1);
+    const cur=e.rows.map(r=>{const x=featRow(r.i);return x&&isNum(r.dap)&&r.dap>=tmin-10&&r.dap<=tmax+20?{d:r.d,dap:r.dap,y:clampY(ridgePredict(model,x))}:null;}).filter(Boolean);
+    if(cur.length<2)return;
+    const sm=movAvg(cur.map(c=>c.y),P.smooth);cur.forEach((c,k)=>c.ys=sm[k]);
+    const ready=cur.find(c=>c.ys>=P.thr);
+    const peak=cur.reduce((a,c)=>c.ys>a.ys?c:a,cur[0]);
+    const last=cur[cur.length-1];
+    results.push({p,variety:e.variety,harvest:e.harvest,cur,ready:ready?ready.d:null,peak:peak.d,peakV:peak.ys,last:last.ys,lastD:last.d});});
+  const dd=(a,b)=>a&&b?Math.round((dms(a)-dms(b))/DAY):null;
+  const hs=el('div',{class:'card span3'},el('h3',{},`Harvest-time prediction (${P.target} ripeness)`),
+    el('p',{class:'sub'},`For every plot the model predicts ${P.target} at each satellite pass (vegetation index + weather on that date), smoothed over ${P.smooth} passes. Predicted ripe date = first pass where predicted ${P.target} ≥ threshold. Only passes within the crop-age range the lab data covers (${fmt(tmin-10,0)}–${fmt(tmax+20,0)} d) are used, and predictions are limited to the lab range of ${P.target}. Default threshold = 80th percentile of the lab values.`));
+  const thr=el('input',{type:'number',step:'0.1',value:P.thr,style:'width:80px',onchange:e=>{P.thr=+e.target.value;render();}});
+  const sm=el('select',{onchange:e=>{P.smooth=+e.target.value;render();}},...[1,3,5].map(v=>el('option',{value:v},v+(v===1?' (none)':' passes'))));sm.value=P.smooth;
+  hs.append(el('div',{class:'ctrl'},el('div',{},el('span',{},`${P.target} threshold for "ripe"`),thr),el('div',{},el('span',{},'Smoothing'),sm)));
+  const deltas=results.map(r=>dd(r.ready,r.harvest)).filter(isNum).sort((a,b)=>a-b);
+  const kk=el('div',{class:'kpis',style:'margin:8px 0'});
+  kk.append(kpi('Plots predicted',results.length),kpi('Reach threshold',results.filter(r=>r.ready).length+' / '+results.length),
+    kpi('Median ready vs planned',deltas.length?(deltas[Math.floor(deltas.length/2)]>0?'+':'')+deltas[Math.floor(deltas.length/2)]+' d':'–','negative = ripe before the planned harvest'));
+  hs.append(kk);
+  const tbl=el('table',{},el('thead',{},el('tr',{},['Plot','Variety','Planned harvest','Predicted ripe date','Ripe vs planned (days)','Predicted peak date','Peak '+P.target,`Latest predicted (${P.target})`].map(h=>el('th',{},h)))),
+    el('tbody',{},results.sort((a,b)=>(a.variety||'').localeCompare(b.variety||'')||a.p.localeCompare(b.p)).map(r=>{const dl=dd(r.ready,r.harvest);
+      return el('tr',{style:'cursor:pointer',onclick:()=>{P.plot=r.p;drawPlot();document.getElementById('pp').scrollIntoView({behavior:'smooth',block:'center'});}},
+        el('td',{},r.p.replace(/^KIAAR_/,'')),el('td',{},r.variety||'–'),el('td',{},r.harvest||'–'),el('td',{},r.ready||'not reached'),
+        el('td',{},dl==null?'–':(dl>0?'+':'')+dl),el('td',{},r.peak+(r.peak===r.lastD?' (still rising)':'')),el('td',{},fmt(r.peakV,2)),el('td',{},fmt(r.last,2)+' · '+r.lastD));})));
+  hs.append(el('div',{class:'tablewrap'},tbl),el('p',{class:'note',style:'margin-top:6px'},'Click a row to see that plot’s predicted curve below.'));
+  out.push(hs);
+
+  /* per-plot curve */
+  const pp=el('div',{class:'card span3',id:'pp'},el('h3',{},'Predicted ripening curve'),el('p',{class:'sub'},'Predicted value from satellite + weather (line), lab measurements (dots), ripeness threshold and planned harvest date'));
+  const psel=el('select',{onchange:e=>{P.plot=e.target.value;drawPlot();}},...results.map(r=>el('option',{value:r.p},r.p.replace(/^KIAAR_/,'')+(r.variety?'  ·  '+r.variety:''))));
+  if(!results.find(r=>r.p===P.plot))P.plot=results.length?results[0].p:null;psel.value=P.plot||'';
+  const cv3=el('canvas');pp.append(el('div',{class:'ctrl'},el('div',{},el('span',{},'Plot'),psel)),el('div',{class:'chartbox',style:'height:320px'},cv3));
+  const hold={};
+  function drawPlot(){
+    psel.value=P.plot;const r=results.find(x=>x.p===P.plot);if(!r)return;
+    const meas=new Map();idxOf(gt).forEach(g=>{if(gt.data['Plot_ID'][g]===P.plot&&isNum(gt.data[P.target][g]))meas.set(dateKey(gt.data['Test_Date'][g]),gt.data[P.target][g]);});
+    const lab=new Set([...r.cur.map(c=>c.d),...meas.keys()]);if(r.harvest)lab.add(r.harvest);
+    const L=[...lab].sort();const pm=new Map(r.cur.map(c=>[c.d,c.ys]));
+    const ymax=Math.max(...r.cur.map(c=>c.ys),...meas.values(),P.thr)*1.05;
+    const ds=[{type:'line',label:`Predicted ${P.target}`,data:L.map(d=>pm.has(d)?pm.get(d):null),borderColor:PAL[0],backgroundColor:PAL[0],spanGaps:true,tension:.25,pointRadius:3},
+      {type:'line',label:`Lab ${P.target}`,data:L.map(d=>meas.has(d)?meas.get(d):null),showLine:false,borderColor:PAL[2],backgroundColor:PAL[2],pointRadius:6,pointStyle:'rectRot'},
+      {type:'line',label:`Ripe threshold (${P.thr})`,data:L.map(()=>P.thr),borderColor:'#16a34a',borderDash:[6,4],borderWidth:2,pointRadius:0}];
+    if(r.harvest)ds.push({type:'bar',label:'Planned harvest',data:L.map(d=>d===r.harvest?ymax:null),backgroundColor:'#dc262688',barThickness:5,order:9});
+    if(r.ready)ds.push({type:'bar',label:'Predicted ripe date',data:L.map(d=>d===r.ready?ymax:null),backgroundColor:'#16a34a88',barThickness:5,order:9});
+    const o=baseOpts();o.scales.x.ticks.autoSkip=true;o.scales.x.ticks.maxTicksLimit=14;o.scales.y.suggestedMin=Math.min(...r.cur.map(c=>c.ys),P.thr)*0.9;
+    if(hold.c){hold.c.destroy();const k=charts.indexOf(hold.c);if(k>=0)charts.splice(k,1);}
+    hold.c=mk(cv3,{data:{labels:L,datasets:ds},options:o});
+  }
+  out.push(pp);
+  setTimeout(drawPlot,0);
+
+  /* ===== variety-wide results (in addition to plot-wise) ===== */
+  const varOf=r=>r.variety||'n/a';
+  const byVar=new Map();results.forEach(r=>{const v=varOf(r);if(!byVar.has(v))byVar.set(v,[]);byVar.get(v).push(r);});
+  const varieties=[...byVar.keys()].sort();
+  const vstat=new Map();
+  rows.forEach((r,k)=>{if(!isNum(predPlot[k]))return;const v=r.variety||'n/a';const a=vstat.get(v)||{n:0,se:0,bias:0};const e=predPlot[k]-r.y;a.n++;a.se+=e*e;a.bias+=e;vstat.set(v,a);});
+  const nearLab=v=>{const q=[];idxOf(gt).forEach(g=>{const dbh=gt.data['Days Before Harvest (DBH)']?gt.data['Days Before Harvest (DBH)'][g]:null,y0=gt.data[P.target][g];
+    if((v==null||(gt.data['Variety Number']&&gt.data['Variety Number'][g]===v))&&isNum(dbh)&&dbh<=15&&dbh>=-5&&isNum(y0))q.push(y0);});return q;};
+  const median=a=>{const b=[...a].sort((x,y)=>x-y);return b.length?b[Math.floor(b.length/2)]:null;};
+  const modeOf=a=>{const m=new Map();a.filter(Boolean).forEach(x=>m.set(x,(m.get(x)||0)+1));let b=null,c=0;m.forEach((n,k)=>{if(n>c){c=n;b=k;}});return b;};
+  const fmtDate=ms=>ms==null?null:new Date(ms).toISOString().slice(0,10);
+  const vrows=varieties.map(v=>{const rs=byVar.get(v);const readyMs=rs.filter(r=>r.ready).map(r=>dms(r.ready));const dl=rs.map(r=>dd(r.ready,r.harvest)).filter(isNum);
+    const st=vstat.get(v),nl=nearLab(v);
+    return {v,n:rs.length,harvest:modeOf(rs.map(r=>r.harvest)),reached:readyMs.length,ready:median(readyMs),delta:median(dl),peakV:mean(rs.map(r=>r.peakV)),last:mean(rs.map(r=>r.last)),
+      lab:nl.length?mean(nl):null,labN:nl.length,rmse:st?Math.sqrt(st.se/st.n):null,bias:st?st.bias/st.n:null};});
+  const vh=el('div',{class:'card span3',id:'vh'},el('h3',{},`Variety-wide harvest-time prediction (${P.target} ripeness)`),
+    el('p',{class:'sub'},`Plots of the same variety combined: predicted ripe date = median over the plots that reach the ${P.target} threshold (${P.thr}). Model error and bias come from out-of-fold predictions on that variety’s lab samples (bias = predicted − lab). Click a row to open its curve.`));
+  const vt=el('table',{},el('thead',{},el('tr',{},['Variety','Plots','Planned harvest','Plots ripe','Predicted ripe date (median)','Ripe vs planned (days)','Predicted peak '+P.target,`Latest predicted ${P.target}`,`Lab ${P.target} near harvest`,'Model error (RMSE)','Bias (pred − lab)'].map(h=>el('th',{},h)))),
+    el('tbody',{},vrows.map(r=>el('tr',{style:'cursor:pointer',onclick:()=>{P.varSel=r.v;drawVar();document.getElementById('vc').scrollIntoView({behavior:'smooth',block:'center'});}},
+      el('td',{},el('b',{},r.v)),el('td',{},r.n),el('td',{},r.harvest||'–'),el('td',{},`${r.reached} / ${r.n}`),el('td',{},fmtDate(r.ready)||'not reached'),
+      el('td',{},r.delta==null?'–':(r.delta>0?'+':'')+r.delta),el('td',{},fmt(r.peakV,2)),el('td',{},fmt(r.last,2)),
+      el('td',{},r.lab==null?'–':fmt(r.lab,2)+` (n=${r.labN})`),el('td',{},fmt(r.rmse,2)),el('td',{},r.bias==null?'–':(r.bias>0?'+':'')+r.bias.toFixed(2))))));
+  vh.append(el('div',{class:'tablewrap'},vt));
+  const vc=el('div',{class:'card span3',id:'vc'},el('h3',{},'Variety-wide ripening curves'),el('p',{class:'sub'},'Predicted value (mean of each variety’s plots at every satellite pass). Compare all varieties, or open one to see lab values, the ripeness threshold, plot-to-plot spread and planned harvest.'));
+  if(P.varSel!=='__all'&&!varieties.includes(P.varSel))P.varSel='__all';
+  const vsel=el('select',{onchange:e=>{P.varSel=e.target.value;drawVar();}},el('option',{value:'__all'},'All varieties (compare)'),...varieties.map(v=>el('option',{value:v},v)));vsel.value=P.varSel;
+  const cvV=el('canvas');vc.append(el('div',{class:'ctrl'},el('div',{},el('span',{},'Variety'),vsel)),el('div',{class:'chartbox',style:'height:340px'},cvV));
+  const holdV={};
+  function drawVar(){
+    vsel.value=P.varSel;
+    const curveOf=v=>{const m=new Map();byVar.get(v).forEach(r=>r.cur.forEach(c=>{const a=m.get(c.d)||[0,0,Infinity,-Infinity];a[0]+=c.ys;a[1]++;a[2]=Math.min(a[2],c.ys);a[3]=Math.max(a[3],c.ys);m.set(c.d,a);}));return m;};
+    let L,ds;const o=baseOpts();o.scales.x.ticks.autoSkip=true;o.scales.x.ticks.maxTicksLimit=14;
+    if(P.varSel==='__all'){
+      const maps=varieties.map(curveOf);L=[...new Set(maps.flatMap(m=>[...m.keys()]))].sort();
+      ds=varieties.map((v,k)=>({type:'line',label:v,borderColor:PAL[k%PAL.length],backgroundColor:PAL[k%PAL.length],tension:.25,spanGaps:true,pointRadius:2,data:L.map(d=>maps[k].has(d)?maps[k].get(d)[0]/maps[k].get(d)[1]:null)}));
+      ds.push({type:'line',label:`Ripe threshold (${P.thr})`,data:L.map(()=>P.thr),borderColor:'#16a34a',borderDash:[6,4],borderWidth:2,pointRadius:0});
+    }else{
+      const v=P.varSel,m=curveOf(v),lab=new Map();
+      idxOf(gt).forEach(g=>{if(gt.data['Variety Number']&&gt.data['Variety Number'][g]===v&&isNum(gt.data[P.target][g])){const d=dateKey(gt.data['Test_Date'][g]);const a=lab.get(d)||[0,0];a[0]+=gt.data[P.target][g];a[1]++;lab.set(d,a);}});
+      const vr=vrows.find(x=>x.v===v),rd=fmtDate(vr.ready);
+      const set=new Set([...m.keys(),...lab.keys()]);if(vr.harvest)set.add(vr.harvest);if(rd)set.add(rd);
+      L=[...set].sort();
+      const ymax=Math.max(...[...m.values()].map(a=>a[3]),...[...lab.values()].map(a=>a[0]/a[1]),P.thr)*1.05;
+      ds=[{type:'line',label:'Predicted (variety mean)',data:L.map(d=>m.has(d)?m.get(d)[0]/m.get(d)[1]:null),borderColor:PAL[0],backgroundColor:PAL[0],spanGaps:true,tension:.25,pointRadius:3},
+        {type:'line',label:'Highest plot',data:L.map(d=>m.has(d)?m.get(d)[3]:null),borderColor:PAL[0]+'66',borderWidth:1,pointRadius:0,spanGaps:true,fill:false},
+        {type:'line',label:'Lowest plot',data:L.map(d=>m.has(d)?m.get(d)[2]:null),borderColor:PAL[0]+'66',borderWidth:1,pointRadius:0,spanGaps:true,backgroundColor:PAL[0]+'22',fill:'-1'},
+        {type:'line',label:`Lab ${P.target} (variety mean)`,data:L.map(d=>lab.has(d)?lab.get(d)[0]/lab.get(d)[1]:null),showLine:false,borderColor:PAL[2],backgroundColor:PAL[2],pointRadius:6,pointStyle:'rectRot'},
+        {type:'line',label:`Ripe threshold (${P.thr})`,data:L.map(()=>P.thr),borderColor:'#16a34a',borderDash:[6,4],borderWidth:2,pointRadius:0}];
+      if(vr.harvest)ds.push({type:'bar',label:'Planned harvest',data:L.map(d=>d===vr.harvest?ymax:null),backgroundColor:'#dc262688',barThickness:5,order:9});
+      if(rd)ds.push({type:'bar',label:'Predicted ripe date (median)',data:L.map(d=>d===rd?ymax:null),backgroundColor:'#16a34a88',barThickness:5,order:9});
+    }
+    if(holdV.c){holdV.c.destroy();const k=charts.indexOf(holdV.c);if(k>=0)charts.splice(k,1);}
+    holdV.c=mk(cvV,{data:{labels:L,datasets:ds},options:o});
+  }
+  out.push(vh,vc);
+  setTimeout(drawVar,0);
+
+  /* ===== predict from user inputs: approx Brix + optimum harvest time ===== */
+  const feats2=[...idxF.map(f=>({k:'idx',n:f})),...wvEff.map(f=>({k:'wx',n:f})),...(P.dap2&&hasDAP?[{k:'dap',n:'DAP'}]:[])];
+  const dbc=s.data['Days Before Harvest (DBH)'];
+  let model2=null,m2=null;
+  if(dbc&&feats2.length){
+    const r2=[];
+    idxOf(s).forEach(i=>{const dap=dapc?dapc[i]:null,dbh=dbc[i];if(!isNum(dbh)||!isNum(dap)||dap<tmin-10||dap>tmax+20)return;
+      const x=featRowF(i,feats2);if(x)r2.push({x,y:dbh,plot:s.data['Plot_ID'][i],month:String(dateKey(s.data['Satellite Observation_Date'][i])).slice(0,7)});});
+    if(r2.length>=20){const y2=r2.map(r=>r.y);model2=fitModel(P.model,r2.map(r=>r.x),y2,lamv);m2=metricsOf(y2,cvPredict(r2,'plot',lamv));if(m2){m2.n=r2.length;m2.mae_m=(metricsOf(y2,cvPredict(r2,'month',lamv))||{}).mae;}}
+  }
+  const needDAP=hasDAP&&(P.dap||P.dap2);
+  const inFeats=[...idxF.map(f=>({k:'idx',n:f})),...wvEff.map(f=>({k:'wx',n:f})),...(needDAP?[{k:'dap',n:'DAP'}]:[])];
+  const valOf=(i,f)=>{if(f.k==='idx')return s.data[f.n][i];if(f.k==='dap')return dapc[i];const w=wmap.get(dateKey(s.data['Satellite Observation_Date'][i]));return w==null?null:wx.data[f.n][w];};
+  const rng={};
+  inFeats.forEach(f=>{const v=[];idxOf(s).forEach(i=>{const dap=dapc?dapc[i]:null;if(isNum(dap)&&dap>=tmin-10&&dap<=tmax+20){const q=valOf(i,f);if(isNum(q))v.push(q);}});
+    rng[f.n]=v.length?[Math.min(...v),Math.max(...v)]:null;});
+  /* prefill source: a plot (or a whole variety) + satellite pass */
+  const lvl=P.level==='variety';
+  const fillPlots=results.map(r=>r.p);
+  if(!fillPlots.includes(P.fillPlot))P.fillPlot=fillPlots[0]||null;
+  if(!varieties.includes(P.fillVar))P.fillVar=varieties[0]||null;
+  const fillKey=lvl?P.fillVar:P.fillPlot;
+  const passesOf=k=>{if(lvl){const rs=byVar.get(k)||[];return [...new Set(rs.flatMap(r=>r.cur.map(c=>c.d)))].sort();}const r=results.find(x=>x.p===k);return r?r.cur.map(c=>c.d):[];};
+  const midDap=(tmin+tmax)/2;
+  const dapOn=(k,d)=>{const rs=lvl?(byVar.get(k)||[]):results.filter(x=>x.p===k);const a=[];rs.forEach(r=>r.cur.forEach(c=>{if(c.d===d)a.push(c.dap);}));return mean(a);};
+  if(!passesOf(fillKey).includes(P.fillDate)){const ps=passesOf(fillKey);P.fillDate=ps.length?ps.reduce((a,d)=>Math.abs(dapOn(fillKey,d)-midDap)<Math.abs(dapOn(fillKey,a)-midDap)?d:a,ps[0]):null;}
+  const rowAt=(pl,d)=>{let hit=null;idxOf(s).forEach(i=>{if(hit==null&&s.data['Plot_ID'][i]===pl&&dateKey(dcol[i])===d)hit=i;});return hit;};
+  const rowsAtVar=(v,d)=>{const a=[];idxOf(s).forEach(i=>{if(s.data['Variety Number']&&s.data['Variety Number'][i]===v&&dateKey(dcol[i])===d)a.push(i);});return a;};
+  const pred=el('div',{class:'card span3',id:'predictor',style:'border:2px solid var(--accent)'},
+    el('h3',{},'🔮 Predict from your own inputs'),
+    el('p',{class:'sub'},`Enter the current satellite values${useWx?' and weather values':' (no weather needed)'} (and crop age) → approximate ${P.target} and the optimum harvest time. Pick a satellite above for the index source; values below follow your model setup.`));
+  const fillPl=el('select',{onchange:e=>{if(lvl)P.fillVar=e.target.value;else P.fillPlot=e.target.value;P.fillDate=null;P.vals={};render();}},...(lvl?varieties:fillPlots).map(x=>el('option',{value:x},lvl?x:x.replace(/^KIAAR_/,''))));fillPl.value=fillKey||'';
+  const fillDt=el('select',{onchange:e=>{P.fillDate=e.target.value;P.vals={};render();}},...passesOf(fillKey).map(x=>el('option',{value:x},x)));fillDt.value=P.fillDate||'';
+  const lvlSel=el('select',{onchange:e=>{P.level=e.target.value;P.fillDate=null;P.vals={};render();}},el('option',{value:'plot'},'Plot-wise'),el('option',{value:'variety'},'Variety-wide'));lvlSel.value=P.level;
+  pred.append(el('div',{class:'ctrl'},el('div',{},el('span',{},'Level'),lvlSel),el('div',{},el('span',{},lvl?'Start from an existing variety (optional)':'Start from an existing plot (optional)'),fillPl),el('div',{},el('span',{},'Satellite pass'),fillDt),
+    el('div',{},el('span',{},' '),el('span',{class:'note'},lvl?'Variety values = average of all its plots on that pass. Overwrite any value with your own.':'…then overwrite any value with your own.'))));
+  const src=lvl?null:rowAt(P.fillPlot,P.fillDate);
+  const vSrc=lvl?rowsAtVar(P.fillVar,P.fillDate):[];
+  const srcVal=f=>lvl?mean(vSrc.map(i=>valOf(i,f))):(src!=null?valOf(src,f):null);
+  const inputs={};
+  const form=el('div',{class:'ctrl',style:'align-items:start'});
+  inFeats.forEach(f=>{
+    const pre=srcVal(f);
+    const cur=P.vals[f.n]!=null?P.vals[f.n]:(isNum(pre)?+(+pre).toFixed(4):'');
+    const inp=el('input',{type:'number',step:'any',value:cur,style:'width:105px',oninput:calc});
+    inputs[f.n]=inp;
+    form.append(el('div',{},el('span',{},f.n==='DAP'?'Crop age (days after planting)':rlabel(f.n)),inp,el('span',{class:'note',id:'rg-'+f.n},rng[f.n]?`data range ${fmt(rng[f.n][0],3)} – ${fmt(rng[f.n][1],3)}`:'')));
+  });
+  const od=el('input',{type:'date',value:P.obsDate&&!P.vals._reset?P.obsDate:(P.fillDate||''),onchange:calc});
+  form.append(el('div',{},el('span',{},'Observation date (for calendar harvest date)'),od));
+  pred.append(form);
+  if(hasDAP)pred.append(el('div',{style:'margin:6px 0'},chk('Also give crop age (days after planting) to the harvest-time model',P.dap2,on=>{P.dap2=on;P.vals={};render();}),el('span',{class:'note'},'  Off = harvest time estimated from vegetation index + weather only (more honest, wider error). On = much tighter (±2 d), but only because the trial used two planned harvest dates, so it mostly re-computes planting date + harvest age.')));
+  if(lvl)pred.append(el('div',{style:'margin:6px 0'},chk('Calibrate to this variety (removes the model’s average error for it)',P.calib,on=>{P.calib=on;calc();})));
+  const outBox=el('div',{class:'kpis',style:'margin:10px 0 0'});pred.append(outBox);
+  const noteBox=el('p',{class:'note'});pred.append(noteBox);
+  function calc(){
+    const v={};inFeats.forEach(f=>{const q=parseFloat(inputs[f.n].value);v[f.n]=isNaN(q)?null:q;P.vals[f.n]=inputs[f.n].value;});
+    inFeats.forEach(f=>{const e=document.getElementById('rg-'+f.n);const r=rng[f.n];if(!e||!r)return;const out=v[f.n]!=null&&(v[f.n]<r[0]||v[f.n]>r[1]);
+      e.style.color=out?'#f59e0b':'';e.textContent=(out?'⚠ outside data range · ':'')+`data range ${fmt(r[0],3)} – ${fmt(r[1],3)}`;});
+    P.obsDate=od.value;outBox.innerHTML='';
+    const get=fl=>{const x=[];for(const f of fl){const q=v[f.n];if(q==null)return null;x.push(q);}return x;};
+    const x1=get(feats);
+    if(!x1){outBox.append(kpi('Approx '+P.target,'–','fill in all fields'));}
+    else{
+      const vs=lvl?vstat.get(P.fillVar):null;const bias=lvl&&P.calib&&vs?vs.bias/vs.n:0;
+      const y1=clampY(ridgePredict(model,x1)-bias),rm=lvl&&vs?Math.sqrt(vs.se/vs.n):(mP?mP.rmse:0);
+      outBox.append(kpi('Approx '+P.target+' (now)'+(lvl?' · '+P.fillVar:''),y1.toFixed(1),`likely range ${(y1-rm).toFixed(1)} – ${(y1+rm).toFixed(1)}  (±RMSE ${rm.toFixed(1)}${bias?`, calibrated ${bias>0?'−':'+'}${Math.abs(bias).toFixed(2)} for this variety`:''})`),
+        kpi('Ripeness',y1>=P.thr?'Ripe ✔':'Not yet',`${P.target} ${y1.toFixed(1)} vs threshold ${P.thr}`));
+    }
+    const x2=model2?get(feats2):null;
+    if(model2&&x2){
+      let days=ridgePredict(model2,x2);days=Math.max(0,Math.min(150,days));
+      const hd=od.value?new Date(Date.parse(od.value+'T00:00:00Z')+Math.round(days)*DAY).toISOString().slice(0,10):null;
+      outBox.append(kpi('Optimum harvest in',Math.round(days)+' days',m2?`typical error ±${m2.mae.toFixed(0)} d for unseen plots · ±${m2.mae_m==null?'–':m2.mae_m.toFixed(0)} d for an unseen month (n=${m2.n} passes)`:''),
+        kpi('Optimum harvest date',hd||'set observation date','from the observation date + predicted days'));
+    } else if(!model2){outBox.append(kpi('Optimum harvest','n/a','no “Days Before Harvest” column or too few rows'));}
+    else outBox.append(kpi('Optimum harvest','–','fill in all fields'));
+    // reference: typical lab value near harvest
+    const near=nearLab(lvl?P.fillVar:null);
+    if(near.length>=3){const mu=mean(near),sd=Math.sqrt(near.reduce((a,b)=>a+(b-mu)**2,0)/near.length);
+      outBox.append(kpi('Typical '+P.target+' at harvest'+(lvl?' · '+P.fillVar:''),mu.toFixed(1),`lab mean ± sd (${sd.toFixed(1)}), n=${near.length} samples taken ≤15 days before harvest`));}
+    if(lvl){const vr=vrows.find(x=>x.v===P.fillVar);if(vr)outBox.append(kpi('Planned harvest · '+P.fillVar,vr.harvest||'–',`${vr.n} plots · model error on this variety ±${vr.rmse==null?'–':vr.rmse.toFixed(1)} ${P.target}`));}
+    let labTxt=null;
+    if(lvl){const q=[];idxOf(gt).forEach(g=>{if(gt.data['Variety Number']&&gt.data['Variety Number'][g]===P.fillVar&&P.fillDate&&Math.abs(dms(gt.data['Test_Date'][g])-dms(P.fillDate))<=P.tol*DAY&&isNum(gt.data[P.target][g]))q.push(gt.data[P.target][g]);});
+      if(q.length)labTxt=`For reference, the lab measured ${P.target} averaging ${fmt(mean(q),2)} (n=${q.length} samples within ${P.tol} d of that pass) for ${P.fillVar} — comparable only while you keep the prefilled values.`;}
+    else if(P.fillPlot&&P.fillDate){let bd=Infinity,lab=null;idxOf(gt).forEach(g=>{if(gt.data['Plot_ID'][g]===P.fillPlot){const d2=Math.abs(dms(gt.data['Test_Date'][g])-dms(P.fillDate));if(d2<bd&&d2<=P.tol*DAY&&isNum(gt.data[P.target][g])){bd=d2;lab={y:gt.data[P.target][g],d:gt.data['Test_Date'][g],gap:Math.round(d2/DAY)};}}});
+      if(lab)labTxt=`For reference, the lab measured ${P.target} = ${fmt(lab.y,2)} on ${String(lab.d).slice(0,10)} for this plot (${lab.gap} d from the pass you started from — only valid while you keep its values unchanged).`;}
+    noteBox.textContent=labTxt||'Tip: start from an existing plot or variety to compare with its lab value, then change the numbers to explore “what if”.';
+  }
+  out.splice(4,0,pred);
+  setTimeout(calc,0);
+
+  out.push(el('div',{class:'card span3'},el('h3',{},'Reading these results'),el('ul',{class:'top3'},
+    el('li',{},'“R² · new plots” says how well the model predicts plots it has not seen; “R² · new dates” is the strict test for a new time period (it must predict from a whole unseen sampling date) and is the more honest number for forecasting.'),
+    el('li',{},'Brix and crop age rise together, so vegetation-index/rainfall features partly act as a proxy for crop stage. Tick “days-after-planting” to see how much it adds.'),
+    el('li',{},'Rainfall windows are identical for every plot on a given day, so flexible models (Random Forest / Boosting / kNN) can use them as a “date fingerprint”; that makes “unseen plots” results look better than they will for a genuinely new season. Compare the “unseen month” error and the strict R² column.'),
+    el('li',{},'Only ~12 sampling dates exist in this dataset; treat predicted ripe dates as an estimate (± the satellite revisit interval) and refresh the model when new lab data arrives.'))));
+  return [el('div',{class:'grid'},...out)];
+}
+
+/* ---------- theme toggle (Auto / Light / Dark) ---------- */
+const THEMES=['auto','light','dark'];
+let theme='auto';
+try{theme=localStorage.getItem('dash-theme')||'auto';}catch(e){}
+function applyTheme(){
+  if(theme==='auto')delete document.documentElement.dataset.theme;else document.documentElement.dataset.theme=theme;
+  const b=document.getElementById('themeBtn');if(b)b.textContent=({auto:'◐ Auto',light:'☀ Light',dark:'☾ Dark'})[theme];
+}
+function cycleTheme(){theme=THEMES[(THEMES.indexOf(theme)+1)%3];try{localStorage.setItem('dash-theme',theme);}catch(e){}applyTheme();render();}
+if(window.matchMedia)window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if(theme==='auto')render();});
+
+/* ---------- routing ---------- */
+let current='Overview';
+const hasPred=()=>S.some(s=>s.data['Satellite Observation_Date']&&s.data['NDVI_Mean'])&&S.some(s=>s.data['Brix']&&s.data['Test_Date']);
+const hasRel=()=>S.some(s=>s.data['Satellite Observation_Date']&&s.data['NDVI_Mean'])&&S.some(s=>s.data['Weather_Date']||s.data['Test_Date']);
+function buildTabs(){
+  const t=document.getElementById('tabs');t.innerHTML='';
+  ['Overview',...(hasRel()?['Relations']:[]),...(hasPred()?['Prediction']:[]),...S.map(s=>s.name)].forEach(n=>t.append(el('button',{class:'tab'+(n===current?' on':''),onclick:()=>{current=n;buildTabs();render();}},(n==='Overview'||n==='Relations'||n==='Prediction')?n:short(n))));
+}
+function render(){
+  clearCharts();root.innerHTML='';
+  if(current==='Overview'){overview().forEach(n=>root.append(n));return;}
+  if(current==='Relations'){relations().forEach(n=>root.append(n));return;}
+  if(current==='Prediction'){prediction().forEach(n=>root.append(n));return;}
+  const items=sheetView(S.find(s=>s.name===current));
+  const g=el('div',{class:'grid'});
+  items.forEach(n=>{ if(n.classList&&n.classList.contains('kpis'))root.append(n); else g.append(n);}); root.append(g);
+}
+document.getElementById('title').textContent=D.file.replace(/\.xlsx?$/i,'');
+document.getElementById('meta').textContent=`Using the first ${S.length} of ${D.total_sheets} sheets: ${D.used_sheets.join(' · ')}`+(D.skipped_sheets.length?`   |   Not used: ${D.skipped_sheets.join(', ')}`:'');
+applyTheme();buildFilters();buildTabs();render();
+</script>
+</body>
+</html>
